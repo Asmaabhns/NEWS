@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const courseSchema = new mongoose.Schema(
+const articlSchema = new mongoose.Schema(
   {
     title: {
       type: String,
@@ -15,5 +15,5 @@ const courseSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-const  Course = mongoose.model(" Course", courseSchema);
-export default  Course;
+const artical = mongoose.model("artic", articlSchema);
+export default artical;

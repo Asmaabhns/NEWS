@@ -6,9 +6,10 @@ import cors from 'cors';
 import { Credentials } from './config/corsOptions.js';
 import cookieParser from 'cookie-parser';
 import { rootRouter } from './routes/root.js'; // Root router
-import userRouter from './routes/authRouters.js'; // Authentication router
-import  UsersRouter from './routes/userRouters.js'; // User router
+import userRouter from './routes/authRouter/authRouters.js'; // Authentication router
 import postRouter from './routes/postRout/postRouter.js';
+import courseRouter from './routes/coursesRouter/courseRouter.js'; // Course router
+import articalRouter from './routes/Articales/articalRouter.js';
 
 dotenv.config();
 
@@ -24,10 +25,11 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Routes
-app.use('/api', rootRouter);
+app.use('/', rootRouter);
 app.use('/auth',userRouter ); // Authentication routes
 app.use('/posts', postRouter); // Post-related routes postRouter
-app.use('/users',UsersRouter ); // Post-related routes
+app.use('/courses',courseRouter ); // Post-related routes
+app.use('/articales',articalRouter ); // Post-related routes
 
 
 // MongoDB connection events
