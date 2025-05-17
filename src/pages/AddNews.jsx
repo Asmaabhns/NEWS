@@ -14,7 +14,7 @@ const AddNews = () => {
 
   const [errors, setErrors] = useState({});
   const [showForm, setShowForm] = useState(false);
-
+      const user=window.localStorage.getItem('user.email');
   const toggleForm = () => {
     setShowForm(!showForm);
   };
@@ -58,7 +58,8 @@ const AddNews = () => {
     <div className="container mt-5">
       <div className="text-end mb-4">
         <h3>مرحباً علي!</h3>
-        <p className="text-muted">Ali@gmail.com</p>
+
+    <p>`${user}`</p>
       </div>
 
       <div className="text-center mb-4" >

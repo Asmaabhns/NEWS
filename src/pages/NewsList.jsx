@@ -45,7 +45,7 @@ const NewsList = () => {
     <div className="container mt-5">
       
     <div className="mb-4">
-    <p>مرحبا علي! Ali@gmail.com</p>
+
   </div>
       <div className="d-flex justify-content-between mb-5">
         <div className="search-box" style={{ width: '300px' }}>
