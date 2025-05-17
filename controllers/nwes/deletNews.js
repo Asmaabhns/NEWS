@@ -1,6 +1,6 @@
-import Post from "../../models/post.js";
+import Post from "../../models/nwes.js";
 
-const deletePost = async (req, res) => {
+const deleteNews = async (req, res) => {
   try {
     // Retrieve the post id from the request parameters
     const { id } = req.params;
@@ -21,4 +21,4 @@ const deletePost = async (req, res) => {
   }
 };
 
-export default deletePost;
+export default deleteNews;

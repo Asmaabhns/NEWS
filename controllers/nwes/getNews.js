@@ -1,6 +1,6 @@
-import Post from "../../models/post.js";
+import Post from "../../models/nwes.js";
 
-const getPosts = async (req, res) => {
+const getNews = async (req, res) => {
   try {
     const posts = await Post.find().sort({ createdAt: -1 }); // Sort by creation date in descending order
     if (!posts.length) {
@@ -12,4 +12,4 @@ const getPosts = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 }
- export default getPosts;
+ export default getNews;

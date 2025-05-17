@@ -6,10 +6,9 @@ import cors from 'cors';
 import { Credentials } from './config/corsOptions.js';
 import cookieParser from 'cookie-parser';
 import { rootRouter } from './routes/root.js'; // Root router
-import userRouter from './routes/authRouter/authRouters.js'; // Authentication router
-import postRouter from './routes/postRout/postRouter.js';
-import courseRouter from './routes/coursesRouter/courseRouter.js'; // Course router
+import userRouter from './routes/authRouter/authRouter.js'; // Authentication router
 import articalRouter from './routes/Articales/articalRouter.js';
+import newsRouter from './routes/newsRout/newsRouter.js'; // News router
 
 dotenv.config();
 
@@ -26,9 +25,8 @@ app.use(express.json());
 
 // Routes
 app.use('/', rootRouter);
-app.use('/auth',userRouter ); // Authentication routes
-app.use('/posts', postRouter); // Post-related routes postRouter
-app.use('/courses',courseRouter ); // Post-related routes
+app.use('/auth',userRouter); // Authentication routes
+app.use('/news', newsRouter); // Post-related routes postRouter
 app.use('/articales',articalRouter ); // Post-related routes
 
 

@@ -26,10 +26,10 @@ export const verifyToken = (req, res, next) => {
 export const verifyAdmin = async (req, res, next) => {
   try {
     console.log('User role from token:', req.user.role); // Log role here
-    if (!req.user || req.user.role !== "admin") {
+    if (!req.user || req.user.role !== "journalist") {
       return res.status(403).json({
         status: "fail",
-        data: { auth: "Access Denied. Admins only." }
+        data: { auth: "Access Denied. journalist only." }
       });
     }
     next();
