@@ -2,7 +2,7 @@ import User from "../../models/user.js";
 
 const getAllUsers = async (req, res) => {
   try {
-    const users = await User.find().select("-password"); // Exclude password from the response
+    const users = await User.find().select("email"); // Exclude password from the response
     if (!users.length) {
       return res.status(404).json({ success: false, message: "No users found." });
     }

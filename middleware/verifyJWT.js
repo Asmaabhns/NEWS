@@ -21,8 +21,6 @@ export const verifyToken = (req, res, next) => {
 
 
 
-  
-// ✅ Verify Admin Middleware
 export const verifyAdmin = async (req, res, next) => {
   try {
     console.log('User role from token:', req.user.role); // Log role here

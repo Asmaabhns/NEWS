@@ -2,17 +2,21 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
+  userId: {
+    type:String,
+    required: true,
+  },
     title: {
       type: String,
       required: true,
       trim: true,
     },
-    classification: {
-      type: String,
-      required: true,
-      enum: ["health", "sports", "the weather", "Disasters" ],
-    },
-    Writer: {
+        category: {
+          type: String,
+          required: true,
+          enum: ["الصحة", "الرياضة", "الطقس", "الكوارث"],
+        },
+    writer: {
       type: String,
       required: true,
     },

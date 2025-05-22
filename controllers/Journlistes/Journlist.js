@@ -3,33 +3,31 @@ import bcrypt from "bcrypt";
 
 const createJournlist = async (req, res) => {
   try {
-    const { username, email, phone, memberShip, password, confirmPassword, specialization } = req.body;
+    const { fullName, email, phone, pressCard, password, specialization } = req.body;
 
-    if (!username || !email || !phone || !memberShip || !password || !confirmPassword || !specialization) {
+    if (!fullName || !email || !phone || !pressCard || !password  || !specialization) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
 
-    if (password !== confirmPassword) {
-      return res.status(400).json({ success: false, message: "Passwords do not match." });
-    }
 
     const existingEmail = await Journlistes.findOne({ email });
     if (existingEmail) {
       return res.status(400).json({ success: false, message: "Email already exists." });
     }
 
-    const existingMembership = await Journlistes.findOne({ memberShip });
-    if (existingMembership) {
-      return res.status(400).json({ success: false, message: "Membership already exists." });
+    const existingpressCard = await Journlistes.findOne({ pressCard });
+    if (existingpressCard) {
+      return res.status(400).json({ success: false, message: "pressCard already exists." });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const journalist = new Journlistes({
-      username,
+      fullName,
       email,
       phone,
-      memberShip,
+      pressCard,
       password: hashedPassword,
       specialization,
     });

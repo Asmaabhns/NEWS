@@ -1,14 +1,14 @@
 import express from 'express'; // Importing express to create a router
 import authController from '../../controllers/auth/authController.js';
-import Journlist from '../../controllers/Journlistes/Journlist.js';
+import journlistController from '../../controllers/Journlistes/Journlist.js'; // Importing the controller for journalist routes
 
 const UsersRouter = express.Router();
 
 // Auth routes
 
 // jourlistes roues
-UsersRouter.route('/journlist/login').post(Journlist.loginJournlist);
-UsersRouter.route('/journlist/register').post(Journlist.createJournlist);
+UsersRouter.route('/journalist/login').post(journlistController.loginJournlist);
+UsersRouter.route('/journalist/register').post(journlistController.createJournlist);
 
 // user routes
 

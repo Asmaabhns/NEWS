@@ -25,11 +25,14 @@ app.use(express.json());
 
 // Routes
 app.use('/', rootRouter);
-app.use('/auth',userRouter); // Authentication routes
-app.use('/news', newsRouter); // Post-related routes postRouter
+app.use('/api/auth',userRouter); // Authentication routes
+app.use('/api/news', newsRouter); // Post-related routes postRouter
 app.use('/articales',articalRouter ); // Post-related routes
 
-
+app.all('*', (req, res) => {
+    res.status(404).json({ message: 'Route not found abdoo' });
+}
+);
 // MongoDB connection events
 mongoose.connection.once('open', () => {
     console.log('MongoDB connection established');
