@@ -1,28 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import instanceAxios from '../components/Axios/Axios';
 
 const NewsList = () => {
   const navigate = useNavigate();
-  const [news, setNews] = useState([
-    {
-      id: 1,
-      category: "الرياضة",
-      title: "1500 شرطي لحماية مباراة فريق سنة المزيد...",
-      author: "محمد أحمد",
-      content: "سيتم نشر المزيد من التفاصيل قريباً...",
-      image: ""
-    },
-    {
-      id: 2,
-      category: "الصحة",
-      title: "نصائح للتغلب على الصداع بدون أدوية",
-      author: "د. علي محمد",
-      content: "تشير الدكتورة أنا تربيخوفاً أخصائية طب الأعصاب...",
-      image: ""
-    }
-  ]);
-
+  const [news, setNews] = useState([]);
   const [newsToDelete, setNewsToDelete] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const userId = localStorage.getItem('id');
+    if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+      navigate('/Journalist-login');
+      return;
+    }
+    getNews(userId);
+  }, [navigate]);
+
+  const getNews = async (userId) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await instanceAxios.get(`/api/news/by-user/${userId}`);
+      if (response.data.success) {
+        setNews(response.data.posts);
+      } else {
+        setError(response.data.message || 'فشل في جلب الأخبار.');
+      }
+    } catch (error) {
+      console.error('فشل في جلب الأخبار:', error.response?.data || error);
+      setError(error.response?.data?.message || 'حدث خطأ أثناء جلب الأخبار.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleEdit = (id) => {
     navigate(`/edit/${id}`);
@@ -33,29 +46,38 @@ const NewsList = () => {
   };
 
   const confirmDelete = () => {
-    setNews(news.filter(item => item.id !== newsToDelete));
+    setNews(news.filter(item => item._id !== newsToDelete));
     setNewsToDelete(null);
+    // TODO: Call API to delete post from backend
+    // instanceAxios.delete(`/api/news/${newsToDelete}`);
   };
 
   const cancelDelete = () => {
     setNewsToDelete(null);
   };
 
-  return (
-    <div className="container mt-5">
-      
-    <div className="mb-4">
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
-  </div>
+  const filteredNews = news.filter(item =>
+    item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="container mt-5" dir="rtl">
       <div className="d-flex justify-content-between mb-5">
         <div className="search-box" style={{ width: '300px' }}>
-          <input 
-            type="text" 
-            placeholder="ادخل كلمة البحث" 
+          <input
+            type="text"
+            placeholder="ادخل كلمة البحث"
             className="form-control"
+            value={searchTerm}
+            onChange={handleSearch}
           />
         </div>
-        <button 
+        <button
           className="btn btn-success"
           onClick={() => navigate('/add-news')}
         >
@@ -63,34 +85,39 @@ const NewsList = () => {
         </button>
       </div>
 
-
-      {news.map(item => (
-        <div key={item.id} className="card mb-3">
-          <div className="card-body">
-            <div className="d-flex justify-content-between align-items-center">
-              <span className="badge bg-success">{item.category}</span>
-              <div>
-                <button 
-                  className="btn btn-sm btn-outline-success mx-1"
-                  onClick={() => handleEdit(item.id)}
-                >
-                  تعديل
-                </button>
-                <button 
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={() => handleDelete(item.id)}
-                >
-                  حذف
-                </button>
-              </div>
-            </div>
-            <h5 className="card-title mt-2">{item.title}</h5>
-            <p className="card-text">{item.content.substring(0, 100)}...</p>
-          </div>
+      {isLoading ? (
+        <div className="text-center">
+          <span className="spinner-border spinner-border-sm me-2" role="status" />
+          جاري التحميل...
         </div>
-      ))}
+      ) : error ? (
+        <div className="alert alert-danger text-center">{error}</div>
+      ) : filteredNews.length === 0 ? (
+        <p className="text-center">لا توجد أخبار متاحة.</p>
+      ) : (
+        filteredNews.map(item => (
+          <div key={item._id} className="card mb-3">
+            <div className="card-body">
+              <div className="d-flex justify-content-between align-items-center">
+                <span className="badge bg-success">{item.category}</span>
+                <div>
 
-      {/* نافذة تأكيد الحذف */}
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={() => handleDelete(item._id)}
+                  >
+                    حذف
+                  </button>
+                </div>
+              </div>
+              <h5 className="card-title mt-2">{item.title}</h5>
+              <p className="card-text"><strong>الكاتب:</strong> {item.writer}</p>
+              <p className="card-text">{item.content.substring(0, 100)}...</p>
+            </div>
+          </div>
+        ))
+      )}
+
       {newsToDelete && (
         <div className="modal-backdrop show" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050 }}>
           <div className="modal d-block" tabIndex="-1">
@@ -115,9 +142,8 @@ const NewsList = () => {
           </div>
         </div>
       )}
-      
     </div>
   );
 };
 
-export default NewsList;
+export default NewsList;

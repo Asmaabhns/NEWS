@@ -515,16 +515,16 @@ const UserSignUp = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('/auth/register', {
+      const response = await axios.post('/api/auth/register', {
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
-      const user = window.localStorage.setItem('user.email', formData.email);
+      // const userfds = window.localStorage.setItem('user.email', formData.email);
       console.log('تم تسجيل الدخول بنجاح:', user);
       // console.log('تم التسجيل بنجاح:', response.data);
 
-      navigate('/add-news', {
+      navigate('/', {
         state: { newlyRegistered: true },
         replace: true
       });

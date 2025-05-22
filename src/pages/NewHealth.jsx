@@ -1,12 +1,45 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import myImage from "./images/تنزيل.jpg";
 import { Link } from "react-router-dom";
+import instanceAxios from "../components/Axios/Axios";
 import HeaderTwo from "../components/HeaderTwo";
 
 function NewHealth() {
+  const [posts, setPosts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [
+    , setImage] = useState("");
+
+  useEffect(() => {
+    getNews();
+  }, []);
+
+  const getNews = async () => {
+    setIsLoading(true);
+    setError("");
+    try {
+      const response = await instanceAxios.get("/api/news", {
+        params: { category: "الصحة" }
+
+      });
+       const image= response.posts.image
+       setImage(image)
+      if (response.data.success) {
+        setPosts(response.data.posts);
+      } else {
+        setError(response.data.message || "فشل في جلب الأخبار الصحية.");
+      }
+    } catch (error) {
+      console.error("فشل في جلب الأخبار:", error.response?.data || error);
+      setError(error.response?.data?.message || "حدث خطأ أثناء جلب الأخبار.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
@@ -37,6 +70,11 @@ function NewHealth() {
     },
   };
 
+  const handleImageError = (e) => {
+    console.warn(`فشل تحميل الصورة: ${e.target.src}`);
+    e.target.src = "https://via.placeholder.com/200x200?text=صورة+غير+متوفرة";
+  };
+
   return (
     <motion.div
       initial="hidden"
@@ -63,10 +101,11 @@ function NewHealth() {
         transition={{ duration: 0.8 }}
       >
         <img
-          src={myImage}
+          src=""
           alt="صورة الصحة"
           className="w-100 h-100 object-fit-cover"
           style={{ filter: "brightness(0.7)" }}
+          onError={handleImageError}
         />
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
@@ -89,92 +128,105 @@ function NewHealth() {
             <div className="card border-0 shadow-sm p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <h5 className="m-0">تصفية الأخبار الصحية</h5>
-            
               </div>
             </div>
           </motion.div>
 
           {/* Cards */}
-          {[...Array(12)].map((_, index) => (
-            <motion.div
-              key={index}
-              className="col-md-6 col-lg-4"
-              variants={cardVariants}
-              initial="offscreen"
-              whileInView="onscreen"
-              viewport={{ once: true, amount: 0.2 }}
-            >
+          {isLoading ? (
+            <div className="text-center col-12">
+              <span className="spinner-border spinner-border-sm me-2" role="status" />
+              جاري التحميل...
+            </div>
+          ) : error ? (
+            <div className="alert alert-danger text-center col-12">{error}</div>
+          ) : posts.length === 0 ? (
+            <p className="text-center col-12">لا توجد أخبار صحية متاحة.</p>
+          ) : (
+            posts.map((post) => (
               <motion.div
-                className="card h-100 border-0 shadow-sm overflow-hidden"
-                whileHover={{
-                  y: -10,
-                  boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
-                }}
+                key={post._id}
+                className="col-md-6 col-lg-4"
+                variants={cardVariants}
+                initial="offscreen"
+                whileInView="onscreen"
+                viewport={{ once: true, amount: 0.2 }}
               >
-                <div
-                  className="position-absolute top-0 end-0 px-3 py-1 text-white"
-                  style={{
-                    backgroundColor: "#4c8565",
-                    borderBottomLeftRadius: "8px",
+                <motion.div
+                  className="card h-100 border-0 shadow-sm overflow-hidden"
+                  whileHover={{
+                    y: -10,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
                   }}
                 >
-                  <small>صحة</small>
-                </div>
-
-                <motion.div
-                  className="card-img-top overflow-hidden"
-                  style={{ height: "200px" }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img
-                    src={myImage}
-                    alt="صحة"
-                    className="img-fluid w-100 h-100 object-fit-cover"
-                  />
-                </motion.div>
-
-                <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">
-                    وزارة الصحة تطلق حملة للتطعيم المجاني ضد الإنفلونزا
-                  </h5>
-                  <p className="card-text text-muted mb-3">
-                    تشمل الحملة الفئات الأكثر عرضة وتشمل مراكز الرعاية الأولية.
-                  </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Link
-                      to="/details"
-                      className="btn btn-sm"
-                      style={{ backgroundColor: "#4c8565", color: "white" }}
-                    >
-                      اقرأ المزيد
-                    </Link>
-                    <small className="text-muted">منذ يوم</small>
+                  <div
+                    className="position-absolute top-0 end-0 px-3 py-1 text-white"
+                    style={{
+                      backgroundColor: "#4c8565",
+                      borderBottomLeftRadius: "8px",
+                    }}
+                  >
+                    <small>صحة</small>
                   </div>
-                </div>
+
+                  <motion.div
+                    className="card-img-top overflow-hidden"
+                    style={{ height: "200px" }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <img
+                      src={post.image || "https://via.placeholder.com/200x200?text=صورة+غير+متوفرة"}
+                      alt={post.title}
+                      className="img-fluid w-100 h-100 object-fit-cover"
+                      onError={handleImageError}
+                    />
+                  </motion.div>
+
+                  <div className="card-body">
+                    <h5 className="card-title fw-bold mb-3">{post.title}</h5>
+                    <p className="card-text text-muted mb-3">
+                      {post.content.substring(0, 100)}...
+                    </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Link
+                        to={`/details/${post._id}`}
+                        className="btn btn-sm"
+                        style={{ backgroundColor: "#4c8565", color: "white" }}
+                      >
+                        اقرأ المزيد
+                      </Link>
+                      <small className="text-muted">
+                        {new Date(post.createdAt).toLocaleDateString("ar-EG")}
+                      </small>
+                    </div>
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ))}
+            ))
+          )}
         </motion.div>
 
         {/* Load more */}
-        <motion.div
-          className="text-center mt-5"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-        >
-          <button
-            className="btn btn-lg px-5"
-            style={{
-              backgroundColor: "#4c8565",
-              color: "white",
-              borderRadius: "50px",
-            }}
+        {posts.length > 0 && (
+          <motion.div
+            className="text-center mt-5"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
           >
-            تحميل المزيد
-          </button>
-        </motion.div>
+            <button
+              className="btn btn-lg px-5"
+              style={{
+                backgroundColor: "#4c8565",
+                color: "white",
+                borderRadius: "50px",
+              }}
+            >
+              تحميل المزيد
+            </button>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );

@@ -27,8 +27,11 @@ export default function LoginToggle() {
   const toggleSwitch = () => {
     isOn ? handleLogout() : handleLogin();
   };
-
+const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   return (
+<>
+{
+isLoggedIn ?<div></div>:
     <div
       style={{
         display: "flex",
@@ -96,5 +99,7 @@ export default function LoginToggle() {
         }}
       />
     </div>
+}
+</>
   );
 }
