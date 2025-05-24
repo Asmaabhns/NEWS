@@ -1,4 +1,4 @@
-import Comment from "../models/commentModel.js";
+import Comment from "../models/comments.js";
 
 // ✅ إنشاء تعليق جديد
 export const createComment = async (req, res) => {
