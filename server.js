@@ -9,7 +9,7 @@ import { rootRouter } from './routes/root.js'; // Root router
 import userRouter from './routes/authRouter/authRouter.js'; // Authentication router
 import articalRouter from './routes/Articales/articalRouter.js';
 import newsRouter from './routes/newsRout/newsRouter.js'; // News router
-
+import commentRoutes from "./routes/commentRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -28,6 +28,7 @@ app.use('/', rootRouter);
 app.use('/api/auth',userRouter); // Authentication routes
 app.use('/api/news', newsRouter); // Post-related routes postRouter
 app.use('/articales',articalRouter ); // Post-related routes
+app.use("/api/comments", commentRoutes);
 
 app.all('*', (req, res) => {
     res.status(404).json({ message: 'Route not found abdoo' });
@@ -43,3 +44,7 @@ mongoose.connection.once('open', () => {
 mongoose.connection.on('error', (err) => {
     console.log('MongoDB connection error: ', err);
 });
+
+
+
+
