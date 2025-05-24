@@ -1,29 +1,37 @@
-// Comment Schema (Mongoose Example)
 import mongoose from "mongoose";
 
-const commentSchema = new mongoose.Schema(
-{
-  _id: ObjectId,
-  user: {
-    _id: ObjectId,
-    name: String,
-    // ممكن تضيف صورة أو أي بيانات تانية
-  },
-  content: String, // التعليق نفسه
-  replies: [
-    {
-      _id: ObjectId,
-      user: {
-        _id: ObjectId,
-        name: String,
+const { Schema, model } = mongoose;
+
+const commentSchema = new Schema(
+  {
+    user: {
+      _id: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'User',
       },
-      content: String, // الرد على التعليق
-      createdAt: Date
-    }
-  ],
-  createdAt: Date
-}
+      name: { type: String, required: true },
+    },
+    content: { type: String, required: true }, // التعليق نفسه
+    replies: [
+      {
+        user: {
+          _id: {
+            type: Schema.Types.ObjectId,
+            required: true,
+            ref: 'User',
+          },
+          name: { type: String, required: true },
+        },
+        content: { type: String, required: true }, // الرد على التعليق
+        createdAt: { type: Date, default: Date.now },
+      }
+    ]
+  },
   { timestamps: true }
 );
-const News = mongoose.model("News", postSchema);
-export default News;
+
+// لو عايز تسميه Comment:
+const Comment = model("Comment", commentSchema);
+
+export default Comment;
