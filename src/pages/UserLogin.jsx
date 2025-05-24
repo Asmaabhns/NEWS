@@ -662,7 +662,7 @@ const UserLogin = () => {
 
 
     try {
-      const response = await instacAxios.post("/auth/login", credentials);
+      const response = await instacAxios.post("/api/auth/login", credentials);
       const { accessToken, success } = response.data; // Assuming the backend returns the user's name
       console.log(response.data);
    
