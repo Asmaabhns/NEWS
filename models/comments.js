@@ -23,3 +23,7 @@ const commentSchema = new mongoose.Schema(
   ],
   createdAt: Date
 }
+  { timestamps: true }
+);
+const News = mongoose.model("News", postSchema);
+export default News;
