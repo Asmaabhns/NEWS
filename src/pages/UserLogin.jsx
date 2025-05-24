@@ -45,7 +45,7 @@
 //     }
 
 //     try {
-//       const response = await instacAxios.post("/auth/login", credentials);
+//       const response = await instacAxios.post("/api/auth/login", credentials);
 //       const { token, success } = response.data;
 
 //       if (success && token) {
