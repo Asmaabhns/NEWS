@@ -1,5 +1,7 @@
 // Comment Schema (Mongoose Example)
+import mongoose from "mongoose";
 
+const commentSchema = new mongoose.Schema(
 {
   _id: ObjectId,
   user: {
