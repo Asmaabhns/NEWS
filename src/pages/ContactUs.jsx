@@ -1,83 +1,81 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBell, faTimes } from '@fortawesome/free-solid-svg-icons';
+import instacAxios from '.././components/Axios/Axios';
 import user1 from './images/تنزيل.jpg';
 import journalist1 from './images/images.jpg';
-import user2 from './images/images (1).jpg';
 
 const ContactUs = () => {
   const [newInquiry, setNewInquiry] = useState('');
   const [replyContent, setReplyContent] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [showSubscription, setShowSubscription] = useState(false);
-  
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'محمد عبد الكريم',
-      content: 'هل الأخبار متعلقة بكل منطقة؟',
-      isJournalist: false,
-      avatar: user1,
-      replies: [
-        {
-          id: 2,
-          sender: 'علي محمد',
-          content: 'نعم صحيح كل منطقة ولها اخبارها الخاصة بها.',
-          isJournalist: true,
-          avatar: journalist1
-        }
-      ]
-    },
-    {
-      id: 3,
-      sender: 'احمد حلمي',
-      content: 'هل الأخبار متعلقة بكل منطقة؟',
-      isJournalist: false,
-      avatar: user2,
-      replies: []
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
 
-  const handleSubmitInquiry = (e) => {
+  // ✅ جلب التعليقات من السيرفر عند تحميل الصفحة
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const { data } = await instacAxios.get('/api/comments');
+        setMessages(data);
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
+
+    fetchComments();
+  }, []);
+
+  // ✅ إرسال تعليق جديد
+  const handleSubmitInquiry = async (e) => {
     e.preventDefault();
     if (!newInquiry.trim()) return;
-    
-    const newMessage = {
-      id: messages.length + 1,
-      sender: 'مستخدم جديد',
-      content: newInquiry,
-      isJournalist: false,
-      avatar: user1,
-      replies: []
-    };
-    
-    setMessages([...messages, newMessage]);
-    setNewInquiry('');
-    setShowSubscription(true); // عرض إشعار الاشتراك بعد الإرسال
+
+    const userId = localStorage.getItem("Id");
+    const userName = localStorage.getItem("Name") || "مستخدم جديد";
+
+    try {
+      const { data } = await instacAxios.post('/api/comments', {
+        content: newInquiry,
+        user: {
+          _id: userId,
+          name: userName
+        }
+      });
+
+      setMessages(prev => [...prev, data]);
+      setNewInquiry('');
+      setShowSubscription(true);
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    }
   };
 
-  const handleSubmitReply = (e) => {
+  // ✅ إرسال رد على تعليق
+  const handleSubmitReply = async (e) => {
     e.preventDefault();
     if (!replyContent.trim() || !replyingTo) return;
-    
-    const updatedMessages = messages.map(msg => {
-      if (msg.id === replyingTo) {
-        const newReply = {
-          id: msg.replies.length + 1 + Math.random(),
-          sender: 'صحفي',
-          content: replyContent,
-          isJournalist: true,
-          avatar: journalist1
-        };
-        return { ...msg, replies: [...msg.replies, newReply] };
-      }
-      return msg;
-    });
-    
-    setMessages(updatedMessages);
-    setReplyContent('');
-    setReplyingTo(null);
+
+    const userId = localStorage.getItem("Id");
+    const userName = localStorage.getItem("Name") || "صحفي";
+
+    try {
+      const { data } = await instacAxios.post(`/api/comments/${replyingTo}/reply`, {
+        content: replyContent,
+        user: {
+          _id: userId,
+          name: userName
+        }
+      });
+
+      const updatedMessages = messages.map(msg => msg._id === data._id ? data : msg);
+      setMessages(updatedMessages);
+      setReplyContent('');
+      setReplyingTo(null);
+    } catch (error) {
+      console.error('Error replying to comment:', error);
+    }
   };
 
   const handleCloseSubscription = () => {
@@ -85,7 +83,6 @@ const ContactUs = () => {
   };
 
   const handleSubscribe = () => {
-    // هنا يمكنك إضافة منطق الاشتراك الفعلي
     setShowSubscription(false);
   };
 
@@ -98,7 +95,7 @@ const ContactUs = () => {
             className="form-control" 
             value={newInquiry} 
             onChange={(e) => setNewInquiry(e.target.value)} 
-            onFocus={() => setShowSubscription(true)} // إظهار الإشعار عند التركيز على الـ input
+            onFocus={() => setShowSubscription(true)} 
             placeholder="اكتب استفسارك هنا..." 
             required 
           />
@@ -108,24 +105,26 @@ const ContactUs = () => {
 
       <div className="chat-messages">
         {messages.map((message) => (
-          <div key={message.id} className="mb-3">
+          <div key={message._id} className="mb-3">
             <div className="d-flex align-items-start mb-2">
-              <img src={message.avatar} alt={message.sender} className="rounded-circle me-2" style={{ width: '40px', height: '40px' }} />
+              <img src={user1} alt={message.user.name} className="rounded-circle me-2" style={{ width: '40px', height: '40px' }} />
               <div className="p-2 rounded bg-white shadow-sm" style={{ maxWidth: '80%' }}>
-                <strong>{message.sender}{message.isJournalist && ' (صحفي)'}</strong>
+                <strong>{message.user.name}</strong>
                 <p className="mb-0">{message.content}</p>
               </div>
             </div>
-            {message.replies.map((reply) => (
-              <div key={reply.id} className="d-flex align-items-start mb-2 ms-4">
-                <img src={reply.avatar} alt={reply.sender} className="rounded-circle me-2" style={{ width: '40px', height: '40px' }} />
+
+            {message.replies.map((reply, index) => (
+              <div key={index} className="d-flex align-items-start mb-2 ms-4">
+                <img src={journalist1} alt={reply.user.name} className="rounded-circle me-2" style={{ width: '40px', height: '40px' }} />
                 <div className="p-2 rounded bg-white shadow-sm" style={{ maxWidth: '80%' }}>
-                  <strong>{reply.sender}{reply.isJournalist && ' (صحفي)'}</strong>
+                  <strong>{reply.user.name}</strong>
                   <p className="mb-0">{reply.content}</p>
                 </div>
               </div>
             ))}
-            <button className="btn btn-success p-2 say" style={{ fontSize: '12px' }} onClick={() => setReplyingTo(message.id)}>الرد</button>
+
+            <button className="btn btn-success p-2" style={{ fontSize: '12px' }} onClick={() => setReplyingTo(message._id)}>الرد</button>
           </div>
         ))}
       </div>
@@ -141,13 +140,12 @@ const ContactUs = () => {
               placeholder="اكتب ردك هنا..." 
               required 
             />
-            <button className="btn btn-success ms-2 margin">إرسال</button>
-            <button className="btn btn-danger ms-2 margin" onClick={() => setReplyingTo(null)}>إلغاء</button>
+            <button className="btn btn-success ms-2">إرسال</button>
+            <button className="btn btn-danger ms-2" onClick={() => setReplyingTo(null)}>إلغاء</button>
           </form>
         </div>
       )}
 
-      {/* إشعار الاشتراك */}
       {showSubscription && (
         <div className="fixed-bottom mb-4 mx-auto" style={{ maxWidth: '500px', left: 0, right: 0 }}>
           <div className="bg-white p-4 rounded shadow-lg position-relative" style={{ border: '1px solid #ddd' }}>
@@ -160,31 +158,16 @@ const ContactUs = () => {
             </button>
             
             <div className="d-flex align-items-center mb-3">
-                        <FontAwesomeIcon 
-                          icon={faBell} 
-                          className="me-1 text-primary " 
-                          size="2x" 
-                        />
-                        <h5 className="mb-0 me-2"> يجب تسجيل الدخوب اولا !</h5>
-                      </div>
+              <FontAwesomeIcon icon={faBell} className="me-1 text-primary" size="2x" />
+              <h5 className="mb-0 me-2">يجب تسجيل الدخول أولاً!</h5>
+            </div>
             
-            
-                      <div className="d-flex justify-content-between align-items-center"> 
-                      <button 
-                            onClick={handleSubscribe}
-                            className="btn  px-4"
-                          >
-                     الغاء
-                          </button>
-                        <a href="/user-login">
-                          <button 
-                            onClick={handleSubscribe}
-                            className="btn btn-primary px-4"
-                          >
-                            تسجيل الدخول
-                          </button>
-                        </a>
-                      </div>
+            <div className="d-flex justify-content-between align-items-center"> 
+              <button onClick={handleSubscribe} className="btn px-4">إلغاء</button>
+              <a href="/user-login">
+                <button onClick={handleSubscribe} className="btn btn-primary px-4">تسجيل الدخول</button>
+              </a>
+            </div>
           </div>
         </div>
       )}
