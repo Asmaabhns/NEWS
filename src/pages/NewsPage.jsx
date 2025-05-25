@@ -1,9 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useScroll, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-
-import myImage from "./images/تنزيل.jpg";
+import instacAxios from "../components/Axios/Axios"; // تأكد من المسار
 import BreakingNewsTicker from "./BreakingNewsTicker";
 import ArticlesGrid from "./ArticlesGrid";
 import ProfitSystem from "./ProfitSystem";
@@ -95,7 +94,7 @@ const NewsCard = styled(motion.div)`
     .card-img-container {
       overflow: hidden;
       height: 200px;
-      
+
       img {
         width: 100%;
         height: 100%;
@@ -111,21 +110,21 @@ const NewsCard = styled(motion.div)`
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      
+
       p {
         font-size: 1.05rem;
         line-height: 1.5;
         color: #333;
         margin-bottom: 1rem;
       }
-      
+
       .read-more {
         color: #4c8565;
         font-weight: 600;
         text-decoration: none;
         display: inline-block;
         transition: all 0.3s ease;
-        
+
         &:hover {
           color: #6bcb94;
           transform: translateX(5px);
@@ -185,8 +184,50 @@ const SidebarWrapper = styled(motion.div)`
   }
 `;
 
+const LoadingSpinner = styled.div`
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #4c8565;
+`;
+
+const ErrorMessage = styled.div`
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #ff4444;
+`;
+
 const NewsPage = () => {
   const { scrollYProgress } = useScroll();
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // جلب البيانات من API
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        setLoading(true);
+        const response = await instacAxios.get("/api/news/");
+        setNews(response.data); // افتراض أن الداتا بترجع كـ array من الأخبار
+        setLoading(false);
+      } catch (err) {
+        setError("فشل تحميل الأخبار. حاول مرة أخرى لاحقًا.");
+        setLoading(false);
+      }
+    };
+    fetchNews();
+  }, []);
+
+  // فلترة الأخبار حسب الفئات
+  const categories = ["الصحة", "الرياضة", "الطقس", "الكوارث"];
+  const categoryIcons = {
+    الصحة: "🏥",
+    الرياضة: "⚽",
+    الطقس: "⛅",
+    الكوارث: "⚠",
+  };
 
   return (
     <motion.div
@@ -196,80 +237,79 @@ const NewsPage = () => {
       variants={containerVariants}
     >
       <ScrollProgress style={{ scaleX: scrollYProgress }} />
-
       <BreakingNewsTicker />
 
       <div className="container-fluid px-lg-5">
         <div className="row mt-4">
           {/* Main Content */}
           <div className="col-lg-8">
-            {["Urgent", "sport", "weather", "disasters", "health"].map(
-              (section) => (
-                <NewsSectionWrapper
-                  key={section}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  viewport={{ once: true, margin: "0px 0px -150px 0px" }}
-                >
-                  <div className="section-header">
-                    <Link to={`${section}`}>
-                      {
-                        {
-                          Urgent: "📰 الأخبار العاجلة",
-                          sport: "⚽ الرياضة",
-                          weather: "⛅ الطقس",
-                          disasters: "⚠ الكوارث",
-                          health: "🏥 الصحة",
-                        }[section]
-                      }
-                    </Link>
-                  </div>
+            {loading ? (
+              <LoadingSpinner>جاري تحميل الأخبار...</LoadingSpinner>
+            ) : error ? (
+              <ErrorMessage>{error}</ErrorMessage>
+            ) : (
+              categories.map((category) => {
+                const filteredNews = news.filter(
+                  (item) => item.category === category
+                );
+                return (
+                  filteredNews.length > 0 && (
+                    <NewsSectionWrapper
+                      key={category}
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      viewport={{ once: true, margin: "0px 0px -150px 0px" }}
+                    >
+                      <div className="section-header">
+                        <Link to={`/category/${category}`}>
+                          {categoryIcons[category]} {category}
+                        </Link>
+                      </div>
 
-                  <div className="row g-4 p-3">
-                    {[1, 2].map((item) => (
-                      <NewsCard
-                        key={item}
-                        className="col-md-6"
-                        variants={hoverVariants}
-                        whileHover="hover"
-                      >
-                        <motion.div
-                          className="card"
-                          whileHover={{
-                            scale: 1.03,
-                            boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
-                          }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 10,
-                          }}
-                        >
-                          <div className="card-img-container">
-                            <motion.img
-                              src={myImage}
-                              alt="خبر عاجل"
-                              initial={{ scale: 1 }}
-                              whileHover={{ scale: 1.1 }}
-                              transition={{ duration: 0.5 }}
-                            />
-                          </div>
-                          
-                          <div className="card-body">
-                            <p className="mb-2">
-                              نرسل لحماية 1500 مباراة فريق سلف
-                            </p>
-                            <Link to="/details" className="read-more">
-                              اقرأ المزيد →
-                            </Link>
-                          </div>
-                        </motion.div>
-                      </NewsCard>
-                    ))}
-                  </div>
-                </NewsSectionWrapper>
-              )
+                      <div className="row g-4 p-3">
+                        {filteredNews.slice(0, 2).map((item) => (
+                          <NewsCard
+                            key={item._id}
+                            className="col-md-6"
+                            variants={hoverVariants}
+                            whileHover="hover"
+                          >
+                            <motion.div
+                              className="card"
+                              whileHover={{
+                                scale: 1.03,
+                                boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+                              }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 10,
+                              }}
+                            >
+                              <div className="card-img-container">
+                                <motion.img
+                                  src={item.image}
+                                  alt={item.title}
+                                  initial={{ scale: 1 }}
+                                  whileHover={{ scale: 1.1 }}
+                                  transition={{ duration: 0.5 }}
+                                />
+                              </div>
+                              <div className="card-body">
+                                <p className="mb-2">{item.title}</p>
+                                <Link to={`/news/${item._id}`} className="read-more">
+                                  اقرأ المزيد →
+                                </Link>
+                              </div>
+                            </motion.div>
+                          </NewsCard>
+                        ))}
+                      </div>
+                    </NewsSectionWrapper>
+                  )
+                );
+              })
             )}
           </div>
 
@@ -289,30 +329,34 @@ const NewsPage = () => {
                   📌 آخر الأخبار
                 </h3>
 
-                {[1, 2, 3, 4].map((item) => (
-                  <motion.div
-                    key={item}
-                    className="sidebar-card card mb-3 bg-light"
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    <div className="row g-0">
-                      <div className="col-4">
-                        <img
-                          src={myImage}
-                          className="w-100 h-100"
-                          alt="خبر جانبي"
-                        />
-                      </div>
-                      <div className="col-8">
-                        <div className="card-body py-2">
-                          <p className="card-text">
-                            ركام كعمانت كبيرة في غزة بسبب الحرب عليها المزيد...
-                          </p>
+                {loading ? (
+                  <LoadingSpinner>جاري تحميل الأخبار...</LoadingSpinner>
+                ) : error ? (
+                  <ErrorMessage>{error}</ErrorMessage>
+                ) : (
+                  news.slice(0, 4).map((item) => (
+                    <motion.div
+                      key={item._id}
+                      className="sidebar-card card mb-3 bg-light"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <div className="row g-0">
+                        <div className="col-4">
+                          <img
+                            src={item.image}
+                            className="w-100 h-100"
+                            alt={item.title}
+                          />
+                        </div>
+                        <div className="col-8">
+                          <div className="card-body py-2">
+                            <p className="card-text">{item.title}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))
+                )}
               </motion.div>
             </SidebarWrapper>
           </div>
@@ -325,4 +369,4 @@ const NewsPage = () => {
   );
 };
 
-export default NewsPage;
+export default NewsPage;
