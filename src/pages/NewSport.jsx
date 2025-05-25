@@ -1,12 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import myImage from "./images/تنزيل.jpg";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
+import instacAxios from "../components/Axios/Axios";
 
 function NewSport() {
+  const [sportsNews, setSportsNews] = useState([]);
+
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
@@ -33,6 +35,20 @@ function NewSport() {
     },
   };
 
+  useEffect(() => {
+    const fetchNews = async () => {
+      try {
+        const response = await instacAxios.get("/api/news");
+        const sports = response.data.filter((news) => news.category === "الرياضة");
+        setSportsNews(sports);
+      } catch (error) {
+        console.error("Error fetching sports news:", error);
+      }
+    };
+
+    fetchNews();
+  }, []);
+
   return (
     <motion.div
       initial="hidden"
@@ -56,12 +72,15 @@ function NewSport() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <img
-          src={myImage}
-          alt="خلفية رياضية"
-          className="w-100 h-100 object-fit-cover"
-          style={{ filter: "brightness(0.7)" }}
-        />
+        {sportsNews[2] && (
+          <img
+            src={sportsNews[2].image}
+            alt="خلفية رياضية"
+            className="w-100 h-100 object-fit-cover"
+            style={{ filter: "brightness(0.7)" }}
+          />
+        )}
+
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -77,18 +96,9 @@ function NewSport() {
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
-          <motion.div className="col-12 mb-4" variants={titleVariants}>
-            <div className="card border-0 shadow-sm p-3">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="m-0">تصفية الأخبار</h5>
-                
-              </div>
-            </div>
-          </motion.div>
-
-          {[...Array(12)].map((_, index) => (
+          {sportsNews.map((news, index) => (
             <motion.div
-              key={index}
+              key={news._id}
               className="col-md-6 col-lg-4"
               variants={cardVariants}
               initial="offscreen"
@@ -109,7 +119,7 @@ function NewSport() {
                     borderBottomLeftRadius: "8px",
                   }}
                 >
-                  <small>رياضة</small>
+                  <small>{news.category}</small>
                 </div>
 
                 <motion.div
@@ -118,22 +128,20 @@ function NewSport() {
                   whileHover={{ scale: 1.05 }}
                 >
                   <img
-                    src={myImage}
-                    alt="صورة رياضية"
+                    src={news.image}
+                    alt={news.title}
                     className="img-fluid w-100 h-100 object-fit-cover"
                   />
                 </motion.div>
 
                 <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">
-                    فوز مثير لفريق الهلال في الدقائق الأخيرة
-                  </h5>
+                  <h5 className="card-title fw-bold mb-3">{news.title}</h5>
                   <p className="card-text text-muted mb-3">
-                    تمكن الهلال من اقتناص الفوز بهدف قاتل في آخر لحظات المباراة
+                    {news.content.slice(0, 100)}...
                   </p>
                   <div className="d-flex justify-content-between align-items-center">
                     <Link
-                      to="/details"
+                      to={`/details/${news._id}`}
                       className="btn btn-sm"
                       style={{
                         backgroundColor: "#4c8565",
@@ -142,7 +150,7 @@ function NewSport() {
                     >
                       اقرأ المزيد
                     </Link>
-                    <small className="text-muted">منذ ساعة</small>
+                    <small className="text-muted">{news.writer}</small>
                   </div>
                 </div>
               </motion.div>
