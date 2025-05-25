@@ -1,12 +1,14 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import myImage from "./images/تنزيل.jpg";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
+import instacAxios from "../components/Axios/Axios";
 
 function NewWeather() {
+  const [weatherNews, setWeatherNews] = useState([]);
+
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
@@ -33,6 +35,20 @@ function NewWeather() {
     },
   };
 
+  useEffect(() => {
+    const fetchWeatherNews = async () => {
+      try {
+        const res = await instacAxios.get("/api/news");
+        const filtered = res.data.filter((news) => news.category === "الطقس");
+        setWeatherNews(filtered);
+      } catch (err) {
+        console.error("Error fetching weather news:", err);
+      }
+    };
+
+    fetchWeatherNews();
+  }, []);
+
   return (
     <motion.div
       initial="hidden"
@@ -56,12 +72,15 @@ function NewWeather() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <img
-          src={myImage}
-          alt="خلفية الطقس"
-          className="w-100 h-100 object-fit-cover"
-          style={{ filter: "brightness(0.7)" }}
-        />
+        {weatherNews[1] && (
+          <img
+            src={weatherNews[1].image}
+            alt="خلفية الطقس"
+            className="w-100 h-100 object-fit-cover"
+            style={{ filter: "brightness(0.7)" }}
+          />
+        )}
+
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -81,14 +100,13 @@ function NewWeather() {
             <div className="card border-0 shadow-sm p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <h5 className="m-0">تصفية الطقس</h5>
-                
               </div>
             </div>
           </motion.div>
 
-          {[...Array(12)].map((_, index) => (
+          {weatherNews.map((news, index) => (
             <motion.div
-              key={index}
+              key={news._id}
               className="col-md-6 col-lg-4"
               variants={cardVariants}
               initial="offscreen"
@@ -109,7 +127,7 @@ function NewWeather() {
                     borderBottomLeftRadius: "8px",
                   }}
                 >
-                  <small>طقس</small>
+                  <small>{news.category}</small>
                 </div>
 
                 <motion.div
@@ -118,22 +136,20 @@ function NewWeather() {
                   whileHover={{ scale: 1.05 }}
                 >
                   <img
-                    src={myImage}
-                    alt="تحديثات الطقس"
+                    src={news.image}
+                    alt={news.title}
                     className="img-fluid w-100 h-100 object-fit-cover"
                   />
                 </motion.div>
 
                 <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">
-                    تحذيرات من عواصف رعدية في مناطق الجنوب
-                  </h5>
+                  <h5 className="card-title fw-bold mb-3">{news.title}</h5>
                   <p className="card-text text-muted mb-3">
-                    الأرصاد الجوية تتوقع تساقط أمطار غزيرة مصحوبة برياح قوية
+                    {news.content.slice(0, 100)}...
                   </p>
                   <div className="d-flex justify-content-between align-items-center">
                     <Link
-                      to="/details"
+                      to={`/details/${news._id}`}
                       className="btn btn-sm"
                       style={{
                         backgroundColor: "#4c8565",
@@ -142,7 +158,7 @@ function NewWeather() {
                     >
                       اقرأ المزيد
                     </Link>
-                    <small className="text-muted">منذ ساعتين</small>
+                    <small className="text-muted">{news.writer}</small>
                   </div>
                 </div>
               </motion.div>
