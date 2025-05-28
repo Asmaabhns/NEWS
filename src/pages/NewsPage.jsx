@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useScroll, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
@@ -210,8 +210,9 @@ const NewsPage = () => {
       try {
         setLoading(true);
         const response = await instacAxios.get("/api/news/");
-        setNews(response.data); // افتراض أن الداتا بترجع كـ array من الأخبار
+        setNews(response.data.posts); // افتراض أن الداتا بترجع كـ array من الأخبار
         setLoading(false);
+       
       } catch (err) {
         setError("فشل تحميل الأخبار. حاول مرة أخرى لاحقًا.");
         setLoading(false);

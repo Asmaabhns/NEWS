@@ -2,78 +2,34 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import { Link } from "react-router-dom";
-import instanceAxios from "../components/Axios/Axios";
 import HeaderTwo from "../components/HeaderTwo";
+import instanceAxios from "../components/Axios/Axios.jsx";
 
 function NewHealth() {
-  const [posts, setPosts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [
-    , setImage] = useState("");
+  const [healthPosts, setHealthPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getNews();
-  }, []);
+    const fetchHealthNews = async () => {
+      try {
+        const { data } = await instanceAxios.get("/api/news");
 
-  const getNews = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await instanceAxios.get("/api/news", {
-        params: { category: "الصحة" }
-
-      });
-       const image= response.posts.image
-       setImage(image)
-      if (response.data.success) {
-        setPosts(response.data.posts);
-      } else {
-        setError(response.data.message || "فشل في جلب الأخبار الصحية.");
+        if (data.success && Array.isArray(data.posts)) {
+          // ✅ تصفية الأخبار الصحية حسب category
+          const filtered = data.posts.filter(
+            (post) => post.category === "الصحة"
+          );
+          setHealthPosts(filtered);
+        }
+      } catch (error) {
+        console.error("حدث خطأ أثناء جلب أخبار الصحة:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("فشل في جلب الأخبار:", error.response?.data || error);
-      setError(error.response?.data?.message || "حدث خطأ أثناء جلب الأخبار.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const cardVariants = {
-    offscreen: { y: 100, opacity: 0, scale: 0.95 },
-    onscreen: {
-      y: 0,
-      opacity: 1,
-      scale: 1,
-      transition: { type: "spring", bounce: 0.4, duration: 0.8 },
-    },
-  };
-
-  const titleVariants = {
-    hidden: { opacity: 0, y: -30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" },
-    },
-  };
-
-  const backgroundVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        when: "beforeChildren",
-      },
-    },
-  };
-
-  const handleImageError = (e) => {
-    console.warn(`فشل تحميل الصورة: ${e.target.src}`);
-    e.target.src = "https://via.placeholder.com/200x200?text=صورة+غير+متوفرة";
-  };
+    fetchHealthNews();
+  }, []);
 
   return (
     <motion.div
@@ -83,7 +39,7 @@ function NewHealth() {
       className="container-fluid px-0 mt-4"
     >
       {/* Header */}
-      <motion.div variants={titleVariants}>
+      <motion.div>
         <HeaderTwo
           links={[
             { label: "الصفحة الرئيسية", href: "/" },
@@ -92,7 +48,7 @@ function NewHealth() {
         />
       </motion.div>
 
-      {/* Hero banner */}
+      {/* Hero Banner */}
       <motion.div
         className="hero-banner position-relative overflow-hidden"
         style={{ height: "400px" }}
@@ -101,11 +57,10 @@ function NewHealth() {
         transition={{ duration: 0.8 }}
       >
         <img
-          src=""
+          src="https://i.pinimg.com/736x/a9/9e/11/a99e11103a2907ab0117de478cea1692.jpg"
           alt="صورة الصحة"
           className="w-100 h-100 object-fit-cover"
-          style={{ filter: "brightness(0.7)" }}
-          onError={handleImageError}
+          style={{ filter: "brightness(0.6)" }}
         />
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
@@ -115,16 +70,15 @@ function NewHealth() {
             className="text-center"
           >
             <h1 className="display-4 fw-bold mb-3">أخبار الصحة</h1>
-            <p className="fs-5">آخر التحديثات الصحية والمعلومات الطبية المهمة</p>
+            <p className="fs-5">تابع أحدث المعلومات الطبية والنصائح الصحية</p>
           </motion.div>
         </div>
       </motion.div>
 
       {/* Main content */}
       <div className="container py-5">
-        <motion.div className="row g-4" variants={backgroundVariants}>
-          {/* Filter card */}
-          <motion.div className="col-12 mb-4" variants={titleVariants}>
+        <motion.div className="row g-4">
+          <motion.div className="col-12 mb-4">
             <div className="card border-0 shadow-sm p-3">
               <div className="d-flex justify-content-between align-items-center">
                 <h5 className="m-0">تصفية الأخبار الصحية</h5>
@@ -132,101 +86,33 @@ function NewHealth() {
             </div>
           </motion.div>
 
-          {/* Cards */}
-          {isLoading ? (
-            <div className="text-center col-12">
-              <span className="spinner-border spinner-border-sm me-2" role="status" />
-              جاري التحميل...
-            </div>
-          ) : error ? (
-            <div className="alert alert-danger text-center col-12">{error}</div>
-          ) : posts.length === 0 ? (
-            <p className="text-center col-12">لا توجد أخبار صحية متاحة.</p>
+          {loading ? (
+            <p>جاري التحميل...</p>
+          ) : healthPosts.length === 0 ? (
+            <p>لا توجد أخبار صحية حالياً.</p>
           ) : (
-            posts.map((post) => (
-              <motion.div
-                key={post._id}
-                className="col-md-6 col-lg-4"
-                variants={cardVariants}
-                initial="offscreen"
-                whileInView="onscreen"
-                viewport={{ once: true, amount: 0.2 }}
-              >
-                <motion.div
-                  className="card h-100 border-0 shadow-sm overflow-hidden"
-                  whileHover={{
-                    y: -10,
-                    boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
-                  }}
-                >
-                  <div
-                    className="position-absolute top-0 end-0 px-3 py-1 text-white"
-                    style={{
-                      backgroundColor: "#4c8565",
-                      borderBottomLeftRadius: "8px",
-                    }}
-                  >
-                    <small>صحة</small>
+            healthPosts.map((post) => (
+              <motion.div key={post._id} className="col-md-6 col-lg-4">
+                <div className="card shadow-sm h-100">
+                  <img
+                    src={post.image || "https://via.placeholder.com/400x250"}
+                    className="card-img-top"
+                    alt={post.title}
+                    style={{ height: "200px", objectFit: "cover" }}
+                  />
+                  <div className="card-body d-flex flex-column">
+                    <h5 className="card-title">{post.title}</h5>
+                    <p className="text-muted mb-1">بقلم: {post.writer}</p>
+                    <p className="card-text">{post.content?.slice(0, 100)}...</p>
+                    <a href={`/news/${post._id}`} className="btn btn-primary mt-auto">
+                      اقرأ المزيد
+                    </a>
                   </div>
-
-                  <motion.div
-                    className="card-img-top overflow-hidden"
-                    style={{ height: "200px" }}
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <img
-                      src={post.image || "https://via.placeholder.com/200x200?text=صورة+غير+متوفرة"}
-                      alt={post.title}
-                      className="img-fluid w-100 h-100 object-fit-cover"
-                      onError={handleImageError}
-                    />
-                  </motion.div>
-
-                  <div className="card-body">
-                    <h5 className="card-title fw-bold mb-3">{post.title}</h5>
-                    <p className="card-text text-muted mb-3">
-                      {post.content.substring(0, 100)}...
-                    </p>
-                    <div className="d-flex justify-content-between align-items-center">
-                      <Link
-                        to={`/details/${post._id}`}
-                        className="btn btn-sm"
-                        style={{ backgroundColor: "#4c8565", color: "white" }}
-                      >
-                        اقرأ المزيد
-                      </Link>
-                      <small className="text-muted">
-                        {new Date(post.createdAt).toLocaleDateString("ar-EG")}
-                      </small>
-                    </div>
-                  </div>
-                </motion.div>
+                </div>
               </motion.div>
             ))
           )}
         </motion.div>
-
-        {/* Load more */}
-        {posts.length > 0 && (
-          <motion.div
-            className="text-center mt-5"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-          >
-            <button
-              className="btn btn-lg px-5"
-              style={{
-                backgroundColor: "#4c8565",
-                color: "white",
-                borderRadius: "50px",
-              }}
-            >
-              تحميل المزيد
-            </button>
-          </motion.div>
-        )}
       </div>
     </motion.div>
   );

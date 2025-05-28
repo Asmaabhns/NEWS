@@ -466,6 +466,7 @@ const UserSignUp = () => {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [data, setData] = useState(null);
   const navigate = useNavigate();
 
   const validateForm = () => {
@@ -520,21 +521,23 @@ const UserSignUp = () => {
         email: formData.email,
         password: formData.password,
       });
-      // const userfds = window.localStorage.setItem('user.email', formData.email);
-      console.log('تم تسجيل الدخول بنجاح:', user);
-      // console.log('تم التسجيل بنجاح:', response.data);
+         const { email,username, success } = response.data; 
+      if (success ===true) {
+      window.localStorage.setItem('login', true);
+      setFormData(response.data); 
+      setData(response.data);
+      }
 
+console.log('تم التسجيل بنجاح:',formData);
       navigate('/', {
         state: { newlyRegistered: true },
         replace: true
       });
 
     } catch (error) {
-      if (error.response) {
-        alert(error.response.data.message || 'فشل في التسجيل');
-      } else {
-        alert('حدث خطأ، يرجى المحاولة لاحقًا');
-      }
+    return error.response && error.response.status === 400
+  
+  
     } finally {
       setIsSubmitting(false);
     }

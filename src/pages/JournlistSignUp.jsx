@@ -108,11 +108,16 @@ console.log('Sending data:', formData);
 
 
       const response = await instanceAxios.post('/api/auth/journalist/register', formDataToSend);
-  window.localStorage.setItem('fullName', response.data.journalist.fullName);
-  window.localStorage.setItem('email', response.data.journalist.email);
-  window.localStorage.setItem('phone', response.data.journalist.phone);
-  window.localStorage.setItem('pressCard', response.data.journalist.pressCard);
-  window.localStorage.setItem('pressCard', response.data.journalist._id);
+      const {journalist}= response.data;
+ 
+   
+   
+  window.localStorage.setItem('name', journalist);
+  window.localStorage.setItem('email', journalist.email);
+  window.localStorage.setItem('phone', journalist.phone);
+  window.localStorage.setItem('pressCard', journalist.pressCard);
+  window.localStorage.setItem('id', journalist.id);
+  window.localStorage.setItem('pressCard', journalist.specialization);
  if (response.data.success) {
         setSuccess(true);
     
@@ -142,10 +147,7 @@ console.log('Response:', response.journalist
   };
   const handleLogoutClick = () => {
 setSuccess(false);
-  window.localStorage.removeItem('fullName');
-  window.localStorage.removeItem('email');
-  window.localStorage.removeItem('phone');
-  window.localStorage.removeItem('pressCard');
+    localStorage.clear();
  
   };
 
@@ -172,13 +174,13 @@ setSuccess(false);
       >
 {success ?<div dir='rtl'  className='col-lg-6 p-4 p-md-5 text-right'>
 
-  <p>الاسم :  {window.localStorage.getItem("fullName")}</p>
+  <p>الاسم :  {window.localStorage.getItem("name")}</p>
   <p>البريد الإلكترون : {window.localStorage.getItem("email")}</p>
   <p>رقم الهاتف : {window.localStorage.getItem("phone")}</p>
   <p>رقم بطاقة الصحفي :  {window.localStorage.getItem("pressCard")}</p>
 <div className="text-center mt-4">
 
-    <button className='btn btn-primary m-3 ' onClick={handleLogoutClick}>التسجيل</button>
+    <button className='btn btn-primary m-3 ' onClick={handleLogoutClick}>تسجيل خروج</button>
     <button className='btn btn-primary m-3 ' onClick={handleAddnews}>إضافة خبر</button>
 </div>
 </div>

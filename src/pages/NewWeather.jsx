@@ -39,7 +39,7 @@ function NewWeather() {
     const fetchWeatherNews = async () => {
       try {
         const res = await instacAxios.get("/api/news");
-        const filtered = res.data.filter((news) => news.category === "الطقس");
+        const filtered = res.data.posts.filter((news) => news.category === "الطقس");
         setWeatherNews(filtered);
       } catch (err) {
         console.error("Error fetching weather news:", err);
@@ -72,9 +72,9 @@ function NewWeather() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        {weatherNews[1] && (
+        {weatherNews[0] && (
           <img
-            src={weatherNews[1].image}
+            src={weatherNews[0].image}
             alt="خلفية الطقس"
             className="w-100 h-100 object-fit-cover"
             style={{ filter: "brightness(0.7)" }}
@@ -104,7 +104,7 @@ function NewWeather() {
             </div>
           </motion.div>
 
-          {weatherNews.map((news, index) => (
+          {weatherNews.map((news) => (
             <motion.div
               key={news._id}
               className="col-md-6 col-lg-4"
@@ -164,25 +164,6 @@ function NewWeather() {
               </motion.div>
             </motion.div>
           ))}
-        </motion.div>
-
-        <motion.div
-          className="text-center mt-5"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-        >
-          <button
-            className="btn btn-lg px-5"
-            style={{
-              backgroundColor: "#4c8565",
-              color: "white",
-              borderRadius: "50px",
-            }}
-          >
-            تحميل المزيد
-          </button>
         </motion.div>
       </div>
     </motion.div>

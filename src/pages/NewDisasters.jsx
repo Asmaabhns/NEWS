@@ -15,7 +15,12 @@ function NewDisasters() {
     const fetchDisasterNews = async () => {
       try {
         const res = await instacAxios.get("/api/news");
-        const filtered = res.data.filter((news) => news.category === "الكوارث");
+
+        console.log("Fetched disaster news:", res.data); // للتأكيد
+
+        const filtered = res.data.posts.filter(
+          (news) => news.category === "الكوارث"
+        );
         setDisasterNews(filtered);
       } catch (error) {
         console.error("خطأ في تحميل أخبار الكوارث:", error);
@@ -23,42 +28,29 @@ function NewDisasters() {
         setLoading(false);
       }
     };
+
     fetchDisasterNews();
   }, []);
 
-  // تأثيرات الحركة للبطاقات
   const cardVariants = {
-    offscreen: {
-      y: 100,
-      opacity: 0,
-      scale: 0.95,
-    },
+    offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
       y: 0,
       opacity: 1,
       scale: 1,
-      transition: {
-        type: "spring",
-        bounce: 0.4,
-        duration: 0.8,
-      },
+      transition: { type: "spring", bounce: 0.4, duration: 0.8 },
     },
   };
 
-  // تأثيرات للعنوان
   const titleVariants = {
     hidden: { opacity: 0, y: -30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
+      transition: { duration: 0.6, ease: "easeOut" },
     },
   };
 
-  // تأثيرات للخلفية
   const backgroundVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -77,7 +69,6 @@ function NewDisasters() {
       exit={{ opacity: 0 }}
       className="container-fluid px-0 mt-4"
     >
-      {/* Header مع تأثير حركي */}
       <motion.div variants={titleVariants}>
         <HeaderTwo
           links={[
@@ -87,7 +78,6 @@ function NewDisasters() {
         />
       </motion.div>
 
-      {/* صورة بانر رئيسية */}
       <motion.div
         className="hero-banner position-relative overflow-hidden"
         style={{ height: "400px" }}
@@ -114,7 +104,6 @@ function NewDisasters() {
         </div>
       </motion.div>
 
-      {/* محتوى الصفحة الرئيسي */}
       <div className="container py-5">
         {loading ? (
           <p className="text-center">جارٍ تحميل أخبار الكوارث...</p>
@@ -122,9 +111,9 @@ function NewDisasters() {
           <p className="text-center">لا توجد أخبار كوارث حالياً</p>
         ) : (
           <motion.div className="row g-4" variants={backgroundVariants}>
-            {disasterNews.map((item) => (
+            {disasterNews.map((news) => (
               <motion.div
-                key={item._id}
+                key={news._id}
                 className="col-md-6 col-lg-4"
                 variants={cardVariants}
                 initial="offscreen"
@@ -138,7 +127,6 @@ function NewDisasters() {
                     boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
                   }}
                 >
-                  {/* شريط التصنيف */}
                   <div
                     className="position-absolute top-0 end-0 px-3 py-1 text-white"
                     style={{
@@ -146,31 +134,29 @@ function NewDisasters() {
                       borderBottomLeftRadius: "8px",
                     }}
                   >
-                    <small>{item.category}</small>
+                    <small>{news.category}</small>
                   </div>
 
-                  {/* صورة الخبر */}
                   <motion.div
                     className="card-img-top overflow-hidden"
                     style={{ height: "200px" }}
                     whileHover={{ scale: 1.05 }}
                   >
                     <img
-                      src={item.image}
-                      alt="صورة الكوارث"
+                      src={news.image}
+                      alt={news.title}
                       className="img-fluid w-100 h-100 object-fit-cover"
                     />
                   </motion.div>
 
-                  {/* محتوى البطاقة */}
                   <div className="card-body">
-                    <h5 className="card-title fw-bold mb-3">{item.title}</h5>
+                    <h5 className="card-title fw-bold mb-3">{news.title}</h5>
                     <p className="card-text text-muted mb-3">
-                      {item.content.substring(0, 100)}...
+                      {news.content.slice(0, 100)}...
                     </p>
                     <div className="d-flex justify-content-between align-items-center">
                       <Link
-                        to={`/details/${item._id}`}
+                        to={`/details/${news._id}`}
                         className="btn btn-sm"
                         style={{
                           backgroundColor: "#a83232",
@@ -179,7 +165,7 @@ function NewDisasters() {
                       >
                         اقرأ المزيد
                       </Link>
-                      <small className="text-muted">{item.writer}</small>
+                      <small className="text-muted">{news.writer}</small>
                     </div>
                   </div>
                 </motion.div>

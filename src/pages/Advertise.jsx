@@ -789,7 +789,7 @@ const Advertise = () => {
                   </div>
                 </div>
               ) : (
-                <CTAButton to="/journalist-signup" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <CTAButton to="/Journlist-login" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   سجل الآن واحصل على مميزات رائعة →
                 </CTAButton>
               )}

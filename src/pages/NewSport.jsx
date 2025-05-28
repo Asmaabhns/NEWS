@@ -39,10 +39,10 @@ function NewSport() {
     const fetchNews = async () => {
       try {
         const response = await instacAxios.get("/api/news");
-        const sports = response.data.filter((news) => news.category === "الرياضة");
+        const sports = response.data.posts.filter((news) => news.category === "الرياضة");
         setSportsNews(sports);
       } catch (error) {
-        console.error("Error fetching sports news:", error);
+        console.error("خطأ في جلب أخبار الرياضة:", error);
       }
     };
 
@@ -72,9 +72,9 @@ function NewSport() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        {sportsNews[2] && (
+        {sportsNews[0] && (
           <img
-            src={sportsNews[2].image}
+            src={sportsNews[0].image}
             alt="خلفية رياضية"
             className="w-100 h-100 object-fit-cover"
             style={{ filter: "brightness(0.7)" }}
@@ -96,7 +96,7 @@ function NewSport() {
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
-          {sportsNews.map((news, index) => (
+          {sportsNews.map((news) => (
             <motion.div
               key={news._id}
               className="col-md-6 col-lg-4"

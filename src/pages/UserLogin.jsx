@@ -669,6 +669,7 @@ const UserLogin = () => {
       if (success && accessToken) {
   window.localStorage.setItem("token", accessToken);
   window.localStorage.setItem("email", credentials.email);
+  window.localStorage.setItem("login", "true"); // Save the name to local storage
   setUserEmail(credentials.email);
   setSuccess(true);
   console.log("تم تسجيل الدخول بنجاح", setSuccess);
@@ -697,21 +698,28 @@ const UserLogin = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("email");
     localStorage.removeItem("name"); // Remove the name from local storage
+    localStorage.removeItem("login"); // Remove the name from local storage
+  
     setUserEmail(null);
     setUserName(null); // Clear the name from the state
-    navigate("/login");
+    navigate("/");
   };
 
   return (
     <div>
       <HeaderTwo links={[{ label: 'الصفحة الرئيسية', href: '/' }, { label: 'تسجيل دخول', href: '#' }]} />
 
-      {success?<div>
-        <p>`welcome ${userEmail}`</p>
-        <button onClick={handleLogout} className="btn btn-danger px-4 py-2">
-          تسجيل الخروج
-        </button>
-      </div>:      <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-3">
+      {success?
+<div dir='rtl'  className='col-lg-6 p-4 p-md-5 text-right'>
+
+  <p>الاسم :  {window.localStorage.getItem("name")}</p>
+  <p>البريد الإلكترون : {window.localStorage.getItem("email")}</p>
+
+
+    <button className='btn btn-primary m-3 ' onClick={handleLogout}>تسجيل خروج</button>
+
+</div>
+:      <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center p-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -746,19 +754,30 @@ const UserLogin = () => {
           <div className="col-lg-6 p-4 p-md-5 bg-white">
             <div className="h-100 d-flex flex-column justify-content-center">
               {userEmail ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-center"
-                >
-                  <h2 className="fw-bold text-dark mb-2">مرحباً بك, {userName ? `Mr. ${userName}` : 'مستخدم'}</h2>
-                  <p className="text-muted mb-4">تم تسجيل الدخول بنجاح</p>
-                  <div className="alert alert-success">البريد الإلكتروني: {userEmail}</div>
-                  <button onClick={handleLogout} className="btn btn-danger px-4 py-2">
-                    تسجيل الخروج
-                  </button>
-                </motion.div>
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ delay: 0.4 }}
+  className="max-w-md mx-auto bg-white shadow-lg rounded-2xl p-8 text-center space-y-6"
+>
+  <h2 className="text-2xl font-extrabold text-gray-800">
+    مرحباً بك، {userName ? `السيد ${userName}` : 'مستخدم'}
+  </h2>
+
+  <p className="text-gray-600">تم تسجيل الدخول بنجاح</p>
+
+  <div className="bg-green-100 text-green-800 py-2 px-4 rounded-md border border-green-300">
+    البريد الإلكتروني: {userEmail}
+  </div>
+
+  <button
+    onClick={handleLogout}
+    className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-md transition duration-200"
+  >
+    تسجيل الخروج
+  </button>
+</motion.div>
+
               ) : (
                 <>
                   <motion.div
