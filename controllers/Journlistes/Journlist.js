@@ -8,7 +8,7 @@ const createJournlist = async (req, res) => {
     if (!fullName || !email || !phone || !pressCard || !password  || !specialization) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
+
 
 
     const existingEmail = await Journlistes.findOne({ email });
@@ -34,7 +34,14 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4
 
     await journalist.save();
 
-    res.status(201).json({ success: true, journalist });
+    res.status(201).json({ success: true,  journalist: {
+    id: journalist._id,
+    fullName: journalist.fullName,
+    email: journalist.email,
+    phone: journalist.phone,
+    pressCard: journalist.pressCard,
+    specialization: journalist.specialization,
+  }, });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error." });
@@ -59,7 +66,11 @@ const loginJournlist = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    res.status(200).json({ success: true, journalist });
+    res.status(200).json({ success: true, journalist:{
+      email: journalist.email,
+      fullName: journalist.fullName,
+      id: journalist._id,
+    } });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error." });

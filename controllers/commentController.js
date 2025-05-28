@@ -3,11 +3,12 @@ import Comment from "../models/comments.js";
 // ✅ إنشاء تعليق جديد
 export const createComment = async (req, res) => {
   try {
-    const { content, user } = req.body;
+    const { comment, user } = req.body;
 
     const newComment = await Comment.create({
-      content,
+      comment,
       user,
+      replay: [],
     });
 
     res.status(201).json(newComment);
@@ -30,14 +31,14 @@ export const getAllComments = async (req, res) => {
 export const addReply = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const { content, user } = req.body;
+    const { content, replayUser } = req.body;
 
     const comment = await Comment.findById(commentId);
     if (!comment) return res.status(404).json({ message: "Comment not found" });
 
-    comment.replies.push({
+    comment.replay.push({
       content,
-      user,
+      replayUser,
     });
 
     await comment.save();
