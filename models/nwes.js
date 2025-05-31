@@ -2,20 +2,20 @@ import mongoose from "mongoose";
 
 const postSchema = new mongoose.Schema(
   {
-  userId: {
-    type:String,
-    required: true,
-  },
+    userId: {
+      type: String,
+      required: true,
+    },
     title: {
       type: String,
       required: true,
       trim: true,
     },
-        category: {
-          type: String,
-          required: true,
-          enum: ["الصحة", "الرياضة", "الطقس", "الكوارث"],
-        },
+    category: {
+      type: String,
+      required: true,
+      enum: ["الصحة", "الرياضة", "الطقس", "الكوارث"],
+    },
     writer: {
       type: String,
       required: true,
@@ -28,9 +28,18 @@ const postSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-
+    region: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    likes: {
+      type: [String], // ✅ مصفوفة من userId
+      default: [],
+    },
   },
   { timestamps: true }
 );
+
 const News = mongoose.model("News", postSchema);
 export default News;
