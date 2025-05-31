@@ -1,5 +1,11 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+
 import AddNews from "./pages/AddNews";
 import Advertise from "./pages/Advertise";
 import Header from "./components/header";
@@ -21,9 +27,11 @@ import ContactUs from "./pages/ContactUs";
 import NewsList from "./pages/NewsList";
 import VerificationPage from "./pages/VerificationPage";
 import NewsPasswordPage from "./pages/NewPasswordPage ";
-import Email from './pages/Email';
+import Email from "./pages/Email";
+import NewsDetails from "./pages/newsDetails";
+import { RegionProvider } from "./pages/RegionContext";
 
-// Scroll to top component
+// ScrollToTop Component
 function ScrollToTop() {
   const { pathname } = useLocation();
   React.useEffect(() => {
@@ -32,17 +40,17 @@ function ScrollToTop() {
   return null;
 }
 
-// Layout component to handle header/footer logic
+// Layout Component
 const Layout = ({ children }) => {
   const location = useLocation();
   const noHeaderFooterPages = [
-    '/user-login',
-    '/Journlist-login',
-    '/journalist-signup',
-    '/user-signup',
-    '/verification',
-    '/newpassword',
-    '/email'
+    "/user-login",
+    "/Journlist-login",
+    "/journalist-signup",
+    "/user-signup",
+    "/verification",
+    "/newpassword",
+    "/email",
   ];
 
   const hideHeaderFooter = noHeaderFooterPages.includes(location.pathname);
@@ -58,32 +66,35 @@ const Layout = ({ children }) => {
 
 function App() {
   return (
-    <Router>
-      <ScrollToTop />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<NewsPage />} />
-          <Route path="/user-login" element={<UserLogin />} />
-          <Route path="/Urgent" element={<NewUrgent />} />
-          <Route path="/Sport" element={<NewSport />} />
-          <Route path="/weather" element={<NewWeather />} />
-          <Route path="/disasters" element={<NewDisasters />} />
-          <Route path="/health" element={<NewHealth />} />
-          <Route path="/details" element={<NewDetails />} />
-          <Route path="/Journlist-login" element={<JournlistLogin />} />
-          <Route path="/journalist-signup" element={<JournlistSignUp />} />
-          <Route path="/user-signup" element={<UserSignUp />} />
-          <Route path="/conect" element={<ContactUs />} />
-          <Route path="/news-list" element={<NewsList />} />
-          <Route path="/add-news" element={<AddNews />} />
-          <Route path="/edit/:id" element={<AddNews />} />
-          <Route path="/advertise" element={<Advertise />} />
-          <Route path="/verification" element={<VerificationPage />} />
-          <Route path="/email" element={<Email />} />
-          <Route path="/newpassword" element={<NewsPasswordPage />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <RegionProvider>
+      <Router>
+        <ScrollToTop />
+        <Layout>
+          <Routes>
+            <Route path="/" element={<NewsPage />} />
+            <Route path="/user-login" element={<UserLogin />} />
+            <Route path="/Urgent" element={<NewUrgent />} />
+            <Route path="/Sport" element={<NewSport />} />
+            <Route path="/weather" element={<NewWeather />} />
+            <Route path="/disasters" element={<NewDisasters />} />
+            <Route path="/health" element={<NewHealth />} />
+            <Route path="/details" element={<NewDetails />} />
+            <Route path="/Journlist-login" element={<JournlistLogin />} />
+            <Route path="/journalist-signup" element={<JournlistSignUp />} />
+            <Route path="/user-signup" element={<UserSignUp />} />
+            <Route path="/conect" element={<ContactUs />} />
+            <Route path="/news-list" element={<NewsList />} />
+            <Route path="/add-news" element={<AddNews />} />
+            <Route path="/edit/:id" element={<AddNews />} />
+            <Route path="/advertise" element={<Advertise />} />
+            <Route path="/verification" element={<VerificationPage />} />
+            <Route path="/email" element={<Email />} />
+            <Route path="/newpassword" element={<NewsPasswordPage />} />
+            <Route path="/details/:id" element={<NewsDetails />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </RegionProvider>
   );
 }
 

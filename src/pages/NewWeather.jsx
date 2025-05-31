@@ -5,9 +5,15 @@ import "../style.css";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
 import instacAxios from "../components/Axios/Axios";
+import { useRegion } from "./RegionContext";
+import CopyLinkButton from "./CopyLinkButton";
 
 function NewWeather() {
   const [weatherNews, setWeatherNews] = useState([]);
+  const [likedPosts, setLikedPosts] = useState({});
+  const { region } = useRegion();
+
+  const userId = window.localStorage.getItem("id") || "defaultUserId"; // Replace with actual user ID logic
 
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
@@ -36,18 +42,55 @@ function NewWeather() {
   };
 
   useEffect(() => {
+    if (!region) return;
+
     const fetchWeatherNews = async () => {
       try {
         const res = await instacAxios.get("/api/news");
-        const filtered = res.data.posts.filter((news) => news.category === "الطقس");
+        const filtered = res.data.posts.filter(
+          (news) => news.region === region && news.category === "الطقس"
+        );
         setWeatherNews(filtered);
+
+        const likesMap = {};
+        filtered.forEach((item) => {
+          likesMap[item._id] = item.likes?.includes(userId);
+        });
+        setLikedPosts(likesMap);
       } catch (err) {
         console.error("Error fetching weather news:", err);
+        setWeatherNews([]);
       }
     };
 
     fetchWeatherNews();
-  }, []);
+  }, [region]);
+
+  const handleLike = async (newsId) => {
+    try {
+      await instacAxios.put(`/api/news/${newsId}/like`, { userId });
+
+      setWeatherNews((prevNews) =>
+        prevNews.map((item) =>
+          item._id === newsId
+            ? {
+                ...item,
+                likes: item.likes.includes(userId)
+                  ? item.likes.filter((id) => id !== userId)
+                  : [...item.likes, userId],
+              }
+            : item
+        )
+      );
+
+      setLikedPosts((prev) => ({
+        ...prev,
+        [newsId]: !prev[newsId],
+      }));
+    } catch (err) {
+      console.error("فشل في تسجيل الإعجاب", err);
+    }
+  };
 
   return (
     <motion.div
@@ -80,7 +123,6 @@ function NewWeather() {
             style={{ filter: "brightness(0.7)" }}
           />
         )}
-
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -98,72 +140,91 @@ function NewWeather() {
         <motion.div className="row g-4" variants={backgroundVariants}>
           <motion.div className="col-12 mb-4" variants={titleVariants}>
             <div className="card border-0 shadow-sm p-3">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="m-0">تصفية الطقس</h5>
-              </div>
+              <h5 className="m-0">أخبار الطقس - {region}</h5>
             </div>
           </motion.div>
 
-          {weatherNews.map((news) => (
-            <motion.div
-              key={news._id}
-              className="col-md-6 col-lg-4"
-              variants={cardVariants}
-              initial="offscreen"
-              whileInView="onscreen"
-              viewport={{ once: true, amount: 0.2 }}
-            >
+          {weatherNews.length === 0 ? (
+            <motion.div className="col-12 text-center" variants={titleVariants}>
+              <div className="alert alert-info">
+                لا توجد أخبار طقس للمنطقة <strong>{region}</strong> في الوقت الحالي.
+              </div>
+            </motion.div>
+          ) : (
+            weatherNews.map((news) => (
               <motion.div
-                className="card h-100 border-0 shadow-sm overflow-hidden"
-                whileHover={{
-                  y: -10,
-                  boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
-                }}
+                key={news._id}
+                className="col-md-6 col-lg-4"
+                variants={cardVariants}
+                initial="offscreen"
+                whileInView="onscreen"
+                viewport={{ once: true, amount: 0.2 }}
               >
-                <div
-                  className="position-absolute top-0 end-0 px-3 py-1 text-white"
-                  style={{
-                    backgroundColor: "#4c8565",
-                    borderBottomLeftRadius: "8px",
+                <motion.div
+                  className="card h-100 border-0 shadow-sm overflow-hidden"
+                  whileHover={{
+                    y: -10,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
                   }}
                 >
-                  <small>{news.category}</small>
-                </div>
-
-                <motion.div
-                  className="card-img-top overflow-hidden"
-                  style={{ height: "200px" }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img
-                    src={news.image}
-                    alt={news.title}
-                    className="img-fluid w-100 h-100 object-fit-cover"
-                  />
-                </motion.div>
-
-                <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">{news.title}</h5>
-                  <p className="card-text text-muted mb-3">
-                    {news.content.slice(0, 100)}...
-                  </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Link
-                      to={`/details/${news._id}`}
-                      className="btn btn-sm"
-                      style={{
-                        backgroundColor: "#4c8565",
-                        color: "white",
-                      }}
-                    >
-                      اقرأ المزيد
-                    </Link>
-                    <small className="text-muted">{news.writer}</small>
+                  <div
+                    className="position-absolute top-0 end-0 px-3 py-1 text-white"
+                    style={{
+                      backgroundColor: "#4c8565",
+                      borderBottomLeftRadius: "8px",
+                    }}
+                  >
+                    <small>{news.category}</small>
                   </div>
-                </div>
+
+                  <motion.div
+                    className="card-img-top overflow-hidden"
+                    style={{ height: "200px" }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <img
+                      src={news.image}
+                      alt={news.title}
+                      className="img-fluid w-100 h-100 object-fit-cover"
+                    />
+                  </motion.div>
+
+                  <div className="card-body">
+                    <h5 className="card-title fw-bold mb-3">{news.title}</h5>
+                    <p className="card-text text-muted mb-3">
+                      {news.content.slice(0, 100)}...
+                    </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Link
+                        to={`/details/${news._id}`}
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: "#4c8565",
+                          color: "white",
+                        }}
+                      >
+                        اقرأ المزيد
+                      </Link>
+                      <small className="text-muted">{news.writer}</small>
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                      <button
+                        onClick={() => handleLike(news._id)}
+                        className="btn btn-outline-success btn-sm"
+                      >
+                        {likedPosts[news._id] ? "❤️" : "🤍"} إعجاب
+                      </button>
+                      <small className="text-muted">
+                        {news.likes?.length || 0} إعجاب
+                      </small>
+                    </div>
+                      <CopyLinkButton postId={news._id} />
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ))}
+            ))
+          )}
         </motion.div>
       </div>
     </motion.div>

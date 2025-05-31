@@ -1,13 +1,18 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
 import instacAxios from "../components/Axios/Axios";
+import { useRegion } from "./RegionContext";
+import CopyLinkButton from "./CopyLinkButton";
 
 function NewSport() {
   const [sportsNews, setSportsNews] = useState([]);
+  const { region } = useRegion();
+  const [likedPosts, setLikedPosts] = useState({});
+  const userId = window.localStorage.getItem("id") || "defaultUserId";
 
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
@@ -36,18 +41,60 @@ function NewSport() {
   };
 
   useEffect(() => {
+    if (!region) return;
+
     const fetchNews = async () => {
       try {
         const response = await instacAxios.get("/api/news");
-        const sports = response.data.posts.filter((news) => news.category === "الرياضة");
-        setSportsNews(sports);
+        const filtered = response.data.posts.filter(
+          (news) => news.region === region && news.category === "الرياضة"
+        );
+        setSportsNews(filtered);
+        const likesMap = {};
+        filtered.forEach((item) => {
+          likesMap[item._id] = item.likes?.includes(userId);
+        });
+        setLikedPosts(likesMap);
       } catch (error) {
         console.error("خطأ في جلب أخبار الرياضة:", error);
+        setSportsNews([]);
       }
     };
 
     fetchNews();
-  }, []);
+  }, [region, userId]);
+
+  // دالة التعامل مع اللايك
+  const handleLike = (postId) => {
+    setLikedPosts((prev) => {
+      const isLiked = prev[postId];
+      return {
+        ...prev,
+        [postId]: !isLiked,
+      };
+    });
+
+    setSportsNews((prevSportsNews) =>
+      prevSportsNews.map((news) => {
+        if (news._id === postId) {
+          const likesSet = new Set(news.likes || []);
+          if (likedPosts[postId]) {
+            likesSet.delete(userId);
+          } else {
+            likesSet.add(userId);
+          }
+          return {
+            ...news,
+            likes: Array.from(likesSet),
+          };
+        }
+        return news;
+      })
+    );
+
+    // لو عندك API لتحديث اللايك في السيرفر، هنا تبعت الطلب مثلاً:
+    // instacAxios.post(`/api/news/${postId}/like`, { userId });
+  };
 
   return (
     <motion.div
@@ -80,7 +127,6 @@ function NewSport() {
             style={{ filter: "brightness(0.7)" }}
           />
         )}
-
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
           <motion.div
             initial={{ y: 50, opacity: 0 }}
@@ -89,92 +135,94 @@ function NewSport() {
             className="text-center"
           >
             <h1 className="display-4 fw-bold mb-3">أخبار الرياضة</h1>
-            <p className="fs-5">تغطية شاملة لأهم البطولات والمباريات</p>
+            <p className="fs-5">أهم المباريات والتغطيات حسب المنطقة: {region}</p>
           </motion.div>
         </div>
       </motion.div>
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
-          {sportsNews.map((news) => (
-            <motion.div
-              key={news._id}
-              className="col-md-6 col-lg-4"
-              variants={cardVariants}
-              initial="offscreen"
-              whileInView="onscreen"
-              viewport={{ once: true, amount: 0.2 }}
-            >
+          {sportsNews.length === 0 ? (
+            <motion.div className="col-12 text-center" variants={titleVariants}>
+              <div className="alert alert-info">
+                لا توجد أخبار رياضية للمنطقة <strong>{region}</strong> حالياً.
+              </div>
+            </motion.div>
+          ) : (
+            sportsNews.map((news) => (
               <motion.div
-                className="card h-100 border-0 shadow-sm overflow-hidden"
-                whileHover={{
-                  y: -10,
-                  boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
-                }}
+                key={news._id}
+                className="col-md-6 col-lg-4"
+                variants={cardVariants}
+                initial="offscreen"
+                whileInView="onscreen"
+                viewport={{ once: true, amount: 0.2 }}
               >
-                <div
-                  className="position-absolute top-0 end-0 px-3 py-1 text-white"
-                  style={{
-                    backgroundColor: "#4c8565",
-                    borderBottomLeftRadius: "8px",
+                <motion.div
+                  className="card h-100 border-0 shadow-sm overflow-hidden"
+                  whileHover={{
+                    y: -10,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
                   }}
                 >
-                  <small>{news.category}</small>
-                </div>
-
-                <motion.div
-                  className="card-img-top overflow-hidden"
-                  style={{ height: "200px" }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img
-                    src={news.image}
-                    alt={news.title}
-                    className="img-fluid w-100 h-100 object-fit-cover"
-                  />
-                </motion.div>
-
-                <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">{news.title}</h5>
-                  <p className="card-text text-muted mb-3">
-                    {news.content.slice(0, 100)}...
-                  </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Link
-                      to={`/details/${news._id}`}
-                      className="btn btn-sm"
-                      style={{
-                        backgroundColor: "#4c8565",
-                        color: "white",
-                      }}
-                    >
-                      اقرأ المزيد
-                    </Link>
-                    <small className="text-muted">{news.writer}</small>
+                  <div
+                    className="position-absolute top-0 end-0 px-3 py-1 text-white"
+                    style={{
+                      backgroundColor: "#4c8565",
+                      borderBottomLeftRadius: "8px",
+                    }}
+                  >
+                    <small>{news.category}</small>
                   </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
-        </motion.div>
 
-        <motion.div
-          className="text-center mt-5"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-        >
-          <button
-            className="btn btn-lg px-5"
-            style={{
-              backgroundColor: "#4c8565",
-              color: "white",
-              borderRadius: "50px",
-            }}
-          >
-            تحميل المزيد
-          </button>
+                  <motion.div
+                    className="card-img-top overflow-hidden"
+                    style={{ height: "200px" }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <img
+                      src={news.image}
+                      alt={news.title}
+                      className="img-fluid w-100 h-100 object-fit-cover"
+                    />
+                  </motion.div>
+
+                  <div className="card-body">
+                    <h5 className="card-title fw-bold mb-3">{news.title}</h5>
+                    <p className="card-text text-muted mb-3">
+                      {news.content.slice(0, 100)}...
+                    </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Link
+                        to={`/details/${news._id}`}
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: "#4c8565",
+                          color: "white",
+                        }}
+                      >
+                        اقرأ المزيد
+                      </Link>
+                      <small className="text-muted">قلم:{news.writer}</small>
+                    </div>
+
+                    <div className="d-flex justify-content-between align-items-center mt-3">
+                      <button
+                        onClick={() => handleLike(news._id)}
+                        className="btn btn-outline-success btn-sm"
+                      >
+                        {likedPosts[news._id] ? "❤️" : "🤍"} إعجاب
+                      </button>
+                      <button className="text-muted" disabled>
+                        {news.likes?.length || 0} إعجاب
+                      </button>
+                    </div>
+                    <CopyLinkButton postId={news._id} />
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))
+          )}
         </motion.div>
       </div>
     </motion.div>
