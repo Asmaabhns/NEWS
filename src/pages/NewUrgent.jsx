@@ -1,12 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import myImage from "./images/تنزيل.jpg";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
+import instanceAxios from "../components/Axios/Axios";
+import { useRegion } from "./RegionContext";
 
 function NewUrgent() {
+  const [breakingNews, setBreakingNews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { region } = useRegion();
+
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
@@ -33,6 +38,34 @@ function NewUrgent() {
     },
   };
 
+  useEffect(() => {
+    const fetchBreakingNews = async () => {
+      try {
+        const response = await instanceAxios.get("/api/news");
+        const filtered = response.data.posts.filter(
+          (item) => item.isBreaking === true && item.region === region
+        );
+        setBreakingNews(filtered);
+      } catch (error) {
+        console.error("فشل جلب الأخبار العاجلة:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (region) {
+      fetchBreakingNews();
+    }
+  }, [region]);
+
+  if (!region) {
+    return (
+      <div className="text-center py-5 text-muted">
+        الرجاء اختيار منطقة لعرض الأخبار العاجلة.
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial="hidden"
@@ -57,7 +90,7 @@ function NewUrgent() {
         transition={{ duration: 0.8 }}
       >
         <img
-          src={myImage}
+          src="./images/world.jpg"
           alt="خلفية أخبار عاجلة"
           className="w-100 h-100 object-fit-cover"
           style={{ filter: "brightness(0.7)" }}
@@ -79,94 +112,80 @@ function NewUrgent() {
         <motion.div className="row g-4" variants={backgroundVariants}>
           <motion.div className="col-12 mb-4" variants={titleVariants}>
             <div className="card border-0 shadow-sm p-3">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="m-0">تصفية الأخبار</h5>
-                
-              </div>
+              <h5 className="m-0">أخبار عاجلة - {region}</h5>
             </div>
           </motion.div>
 
-          {[...Array(12)].map((_, index) => (
-            <motion.div
-              key={index}
-              className="col-md-6 col-lg-4"
-              variants={cardVariants}
-              initial="offscreen"
-              whileInView="onscreen"
-              viewport={{ once: true, amount: 0.2 }}
-            >
+          {loading ? (
+            <div className="text-center py-5">جاري التحميل...</div>
+          ) : breakingNews.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              لا توجد أخبار عاجلة حالياً في منطقة <strong>{region}</strong>.
+            </div>
+          ) : (
+            breakingNews.map((news) => (
               <motion.div
-                className="card h-100 border-0 shadow-sm overflow-hidden"
-                whileHover={{
-                  y: -10,
-                  boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
-                }}
+                key={news._id}
+                className="col-md-6 col-lg-4"
+                variants={cardVariants}
+                initial="offscreen"
+                whileInView="onscreen"
+                viewport={{ once: true, amount: 0.2 }}
               >
-                <div
-                  className="position-absolute top-0 end-0 px-3 py-1 text-white"
-                  style={{
-                    backgroundColor: "#dc3545",
-                    borderBottomLeftRadius: "8px",
+                <motion.div
+                  className="card h-100 border-0 shadow-sm overflow-hidden"
+                  whileHover={{
+                    y: -10,
+                    boxShadow: "0 15px 30px rgba(0,0,0,0.12)",
                   }}
                 >
-                  <small>عاجل</small>
-                </div>
-
-                <motion.div
-                  className="card-img-top overflow-hidden"
-                  style={{ height: "200px" }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <img
-                    src={myImage}
-                    alt="صورة عاجلة"
-                    className="img-fluid w-100 h-100 object-fit-cover"
-                  />
-                </motion.div>
-
-                <div className="card-body">
-                  <h5 className="card-title fw-bold mb-3">
-                    خبر عاجل: انفجار ضخم في وسط العاصمة
-                  </h5>
-                  <p className="card-text text-muted mb-3">
-                    السلطات تحقق في أسباب الانفجار، ولا تقارير عن إصابات حتى اللحظة.
-                  </p>
-                  <div className="d-flex justify-content-between align-items-center">
-                    <Link
-                      to="/details"
-                      className="btn btn-sm"
-                      style={{
-                        backgroundColor: "#dc3545",
-                        color: "white",
-                      }}
-                    >
-                      اقرأ المزيد
-                    </Link>
-                    <small className="text-muted">قبل قليل</small>
+                  <div
+                    className="position-absolute top-0 end-0 px-3 py-1 text-white"
+                    style={{
+                      backgroundColor: "#dc3545",
+                      borderBottomLeftRadius: "8px",
+                    }}
+                  >
+                    <small>عاجل</small>
                   </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          ))}
-        </motion.div>
 
-        <motion.div
-          className="text-center mt-5"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-        >
-          <button
-            className="btn btn-lg px-5"
-            style={{
-              backgroundColor: "#dc3545",
-              color: "white",
-              borderRadius: "50px",
-            }}
-          >
-            تحميل المزيد
-          </button>
+                  <motion.div
+                    className="card-img-top overflow-hidden"
+                    style={{ height: "200px" }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <img
+                      src={news.image || "/images/تنزيل.jpg"}
+                      alt={news.title || "صورة الخبر"}
+                      className="img-fluid w-100 h-100 object-fit-cover"
+                    />
+                  </motion.div>
+
+                  <div className="card-body">
+                    <h5 className="card-title fw-bold mb-3">{news.title}</h5>
+                    <p className="card-text text-muted mb-3">
+                      {news.content
+                        ? `${news.content.slice(0, 100)}...`
+                        : "لا يوجد محتوى متاح."}
+                    </p>
+                    <div className="d-flex justify-content-between align-items-center">
+                      <Link
+                        to={`/details/${news._id}`}
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: "#dc3545",
+                          color: "white",
+                        }}
+                      >
+                        اقرأ المزيد
+                      </Link>
+                      <small className="text-muted">{news.writer}</small>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))
+          )}
         </motion.div>
       </div>
     </motion.div>

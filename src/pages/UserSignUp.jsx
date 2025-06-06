@@ -65,13 +65,9 @@ const UserSignUp = () => {
     if (!validateForm()) return;
 
     setIsSubmitting(true);
-
+console.log('جاري التسجيل:', formData);
     try {
-      const response = await axios.post('/api/auth/register', {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await axios.post('/api/auth/register', formData, );
          const { email,username, success } = response.data; 
       if (success ===true) {
       window.localStorage.setItem('login', true);

@@ -2,14 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { motion } from 'framer-motion';
+import instanceAxios from '../components/Axios/Axios';
 
 const Email = () => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [sendEmail , setSendEmail] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault();
+    const resetPassWord =await instanceAxios.post('/api/auth/forget-password', { email });
+    const sendEmail= resetPassWord.data.success;
+  (sendEmail) ? setSendEmail(true) : setSendEmail(false);
+   
     setError('');
 
     // التحقق من صحة البريد الإلكتروني
@@ -18,10 +24,10 @@ const Email = () => {
       return;
     }
 
-    console.log('Email submitted:', email);
-    navigate('/verification');
   };
-
+const goback = () => {  
+  navigate('/user-login');
+  }
   return (
     <div className="container-fluid min-vh-100 d-flex align-items-center justify-content-center ">
       <motion.div
@@ -56,8 +62,16 @@ const Email = () => {
             {error}
           </motion.div>
         )}
+{sendEmail ? (       <div className="text-center mb-4">
+        
+          <p className="text-muted mt-2"> Gmail تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني على   </p>
+          <p className="fw-bold" style={{ color: '#4c8565' }}>{email}</p>
+          <p className="text-muted mt-2"> <button  className="btn btn-link p-0 align-baseline"  onClick={goback}> تسجيل الدخول </button>   بعد إعادة تعيين كلمة المرور، قم بـ
+</p>
+         
 
-        <form onSubmit={handleSubmit}>
+        </div>):
+                <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="form-label fw-semibold fs-5 mb-3" style={{ color: '#495057' }}>
               البريد الإلكتروني
@@ -96,6 +110,8 @@ const Email = () => {
             </motion.button>
           </div>
         </form>
+        }
+
 
         
       </motion.div>

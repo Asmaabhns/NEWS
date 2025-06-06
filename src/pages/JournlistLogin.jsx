@@ -79,7 +79,10 @@ const JournalistLogin = () => {
     setIsTransitioning(true);
     navigate("/journalist-signup");
   };
-
+const goToEmail = () => {
+    setIsTransitioning(true);
+    navigate("/journalist-forget-password");
+  };
   return (
     <div className="container-fluid min-vh-100 align-items-center justify-content-center p-3">
       <HeaderTwo
@@ -208,9 +211,12 @@ const JournalistLogin = () => {
                     <input type="checkbox" id="remember" className="form-check-input" />
                     <label htmlFor="remember" className="form-check-label">تذكرني</label>
                   </div>
-                  <a href="/email" className="text-decoration-none" style={{ color: "#4c8565" }}>
-                    نسيت كلمة المرور؟
-                  </a>
+                
+                    
+                    <button className="btn btn-link p-0" onClick={goToEmail} style={{ color: "#4c8565" }}>
+                   نسيت كلمة المرور؟
+                    </button>
+                  
                 </div>
 
                 <motion.button

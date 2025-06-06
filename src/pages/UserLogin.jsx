@@ -405,7 +405,7 @@ const UserLogin = () => {
 
     const handleSinUpClick = () => {
     setIsTransitioning(true);
-    setTimeout(() => navigate('/user-login'), 500);
+  navigate('/user-signup');
   };
 
   return (
@@ -414,7 +414,7 @@ const UserLogin = () => {
 
       {success ? (
         <div dir='rtl' className='col-lg-6 p-4 p-md-5 text-right'>
-          <p>الاسم : {userName}</p>
+          <h1> </h1>
           <p>البريد الإلكترون : {userEmail}</p>
           <button className='btn btn-primary m-3' onClick={handleLogout}>تسجيل خروج</button>
         </div>

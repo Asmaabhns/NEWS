@@ -1,9 +1,7 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import instanceAxios from '../components/Axios/Axios';
-
 
 const AddNews = () => {
   const navigate = useNavigate();
@@ -14,8 +12,10 @@ const AddNews = () => {
     writer: '',
     image: '',
     content: '',
-    region:"",
+    region: '',
+    isBreaking: false, // ✅ جديد
   });
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,8 +33,10 @@ const AddNews = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    const newValue = type === 'checkbox' ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: newValue }));
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -45,9 +47,9 @@ const AddNews = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setErrors({}); // Clear previous errors
-   
-    const idform = window.localStorage.getItem("id");
+    setErrors({});
+
+    const idform = window.localStorage.getItem('id');
     const newFormData = new FormData();
     newFormData.append('userId', idform || '');
     newFormData.append('title', formData.title);
@@ -56,6 +58,8 @@ const AddNews = () => {
     newFormData.append('image', formData.image);
     newFormData.append('content', formData.content);
     newFormData.append('region', formData.region);
+    newFormData.append('isBreaking', formData.isBreaking); // ✅ مضافة
+
     console.log('FormData prepared:', Array.from(newFormData.entries()));
 
     try {
@@ -78,8 +82,8 @@ const AddNews = () => {
   return (
     <div dir="rtl" className="container text-right mt-5">
       <div className="text-end mb-4">
-        <h3 dir="rtl" className="text-right">مرحباً</h3>
-        <p>{window.localStorage.getItem("fullName") || 'غير متوفر'}</p>
+        <h3 className="text-right">مرحباً</h3>
+        <p>{window.localStorage.getItem('fullName') || 'غير متوفر'}</p>
       </div>
 
       <div className="card shadow-sm p-4 mb-5">
@@ -87,6 +91,7 @@ const AddNews = () => {
         {errors.submit && (
           <div className="alert alert-danger text-center">{errors.submit}</div>
         )}
+
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">عنوان الخبر *</label>
@@ -115,6 +120,19 @@ const AddNews = () => {
               <option value="الكوارث">الكوارث</option>
             </select>
           </div>
+          <div className="form-check mb-3">
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id="isBreaking"
+              name="isBreaking"
+              checked={formData.isBreaking}
+              onChange={handleChange}
+            />
+            <label className="form-check-label" htmlFor="isBreaking">
+              هل الخبر عاجل؟
+            </label>
+          </div>
           <div className="mb-3">
             <label className="form-label">المنطقة *</label>
             <select
@@ -123,10 +141,10 @@ const AddNews = () => {
               value={formData.region}
               onChange={handleChange}
             >
-        <option value="">اختر المنطقة</option>
-            <option value="مصر">مصر</option>
-            <option value="سوريا">سوريا</option>
-            <option value="غزة">غزة</option>
+              <option value="">اختر المنطقة</option>
+              <option value="مصر">مصر</option>
+              <option value="سوريا">سوريا</option>
+              <option value="غزة">غزة</option>
             </select>
           </div>
 
@@ -166,6 +184,7 @@ const AddNews = () => {
             />
             {errors.content && <div className="invalid-feedback">{errors.content}</div>}
           </div>
+
 
           <div className="d-flex justify-content-between mt-4">
             <button

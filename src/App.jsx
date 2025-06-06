@@ -16,7 +16,7 @@ import NewsPage from "./pages/NewsPage";
 import UserLogin from "./pages/UserLogin";
 import NewSport from "./pages/NewSport";
 import NewWeather from "./pages/NewWeather";
-import NewDetails from "./pages/NewDetails";
+import NewsDetails from './pages/NewDetails'
 import NewUrgent from "./pages/NewUrgent";
 import NewDisasters from "./pages/NewDisasters";
 import NewHealth from "./pages/NewHealth";
@@ -28,8 +28,10 @@ import NewsList from "./pages/NewsList";
 import VerificationPage from "./pages/VerificationPage";
 import NewsPasswordPage from "./pages/NewPasswordPage ";
 import Email from "./pages/Email";
-import NewsDetails from "./pages/newsDetails";
+
 import { RegionProvider } from "./pages/RegionContext";
+import JournalistForgetPassword from "./pages/journalistForgetPassword";
+import NewPasswordPage from "./pages/journalistCreateNewPassword";
 
 // ScrollToTop Component
 function ScrollToTop() {
@@ -49,7 +51,7 @@ const Layout = ({ children }) => {
     "/journalist-signup",
     "/user-signup",
     "/verification",
-    "/newpassword",
+    "/reset-password",
     "/email",
   ];
 
@@ -78,7 +80,6 @@ function App() {
             <Route path="/weather" element={<NewWeather />} />
             <Route path="/disasters" element={<NewDisasters />} />
             <Route path="/health" element={<NewHealth />} />
-            <Route path="/details" element={<NewDetails />} />
             <Route path="/Journlist-login" element={<JournlistLogin />} />
             <Route path="/journalist-signup" element={<JournlistSignUp />} />
             <Route path="/user-signup" element={<UserSignUp />} />
@@ -89,8 +90,11 @@ function App() {
             <Route path="/advertise" element={<Advertise />} />
             <Route path="/verification" element={<VerificationPage />} />
             <Route path="/email" element={<Email />} />
-            <Route path="/newpassword" element={<NewsPasswordPage />} />
+            <Route path="/reset-password/:token" element={<NewsPasswordPage />} />
             <Route path="/details/:id" element={<NewsDetails />} />
+            <Route path="/journalist-forget-password" element={<JournalistForgetPassword />} />
+  
+            <Route path="/journalist/reset-password/:token" element={<NewPasswordPage />} />
           </Routes>
         </Layout>
       </Router>

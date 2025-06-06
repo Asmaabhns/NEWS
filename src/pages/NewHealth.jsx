@@ -6,6 +6,7 @@ import HeaderTwo from "../components/HeaderTwo";
 import instanceAxios from "../components/Axios/Axios.jsx";
 import { useRegion } from "./RegionContext";
 import CopyLinkButton from "./CopyLinkButton.jsx";
+import { Link } from "react-router-dom";
 
 function NewHealth() {
   const [healthPosts, setHealthPosts] = useState([]);
@@ -176,9 +177,19 @@ function NewHealth() {
                       </small>
                     </div>
 
-                    <a href={`/news/${post._id}`} className="btn btn-primary mt-2">
-                      اقرأ المزيد
-                    </a>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Link
+                              to={`/details/${post._id}`}
+                              className="btn btn-sm"
+                              style={{
+                                backgroundColor: "#4c8565",
+                                color: "white",
+                              }}
+                            >
+                              اقرأ المزيد
+                            </Link>
+                            <small className="text-muted">{post.writer}</small>
+                          </div>
                     <CopyLinkButton postId={post._id} />  
                   </div>
                 </div>
