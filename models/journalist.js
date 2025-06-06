@@ -8,6 +8,8 @@ const journalistSchema = new mongoose.Schema(
     pressCard: { type: String, required: true, trim: true },
     password: { type: String, required: true },
     specialization: { type: String, required: true, trim: true },
+    resetToken: String,
+    resetTokenExpiration: Date,
   },
   { timestamps: true }
 );

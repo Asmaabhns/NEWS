@@ -37,6 +37,10 @@ const postSchema = new mongoose.Schema(
       type: [String], // ✅ مصفوفة من userId
       default: [],
     },
+    isBreaking: {
+      type: Boolean,
+      default: false, // ✅ افتراضي مش عاجل
+    },
   },
   { timestamps: true }
 );

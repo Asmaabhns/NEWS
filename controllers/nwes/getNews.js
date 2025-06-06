@@ -12,13 +12,14 @@ export const getNews = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 }
-export const getNewsByUserId = async (req, res) => {
+
+export const getNewsById = async (req, res) => {
   try {
-    const posts = await Post.find({ userId: req.params.userId });
-    if (!posts || posts.length === 0) {
-      return res.status(404).json({ success: false, message: "No posts found for this user." });
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ success: false, message: "Post not found." });
     }
-    res.status(200).json({ success: true, posts });
+    res.status(200).json({ success: true, post });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: "Internal server error." });
