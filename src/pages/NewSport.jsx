@@ -1,17 +1,18 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
 import instacAxios from "../components/Axios/Axios";
-import { useRegion } from "./RegionContext";
+import { useRegion } from "../components/contaextApi/RegionContext";
 import CopyLinkButton from "./CopyLinkButton";
 
 function NewSport() {
   const [sportsNews, setSportsNews] = useState([]);
   const { region } = useRegion();
   const [likedPosts, setLikedPosts] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
   const userId = window.localStorage.getItem("id") || "defaultUserId";
 
   const cardVariants = {
@@ -64,21 +65,25 @@ function NewSport() {
     fetchNews();
   }, [region, userId]);
 
-  // دالة التعامل مع اللايك
-  const handleLike = (postId) => {
-    setLikedPosts((prev) => {
-      const isLiked = prev[postId];
-      return {
-        ...prev,
-        [postId]: !isLiked,
-      };
-    });
+  const handleLike = async (postId) => {
+    if (!userId || userId === "defaultUserId") {
+      alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
+      return;
+    }
+
+    const isCurrentlyLiked = likedPosts[postId];
+
+    // Optimistically update UI
+    setLikedPosts((prev) => ({
+      ...prev,
+      [postId]: !isCurrentlyLiked,
+    }));
 
     setSportsNews((prevSportsNews) =>
       prevSportsNews.map((news) => {
         if (news._id === postId) {
           const likesSet = new Set(news.likes || []);
-          if (likedPosts[postId]) {
+          if (isCurrentlyLiked) {
             likesSet.delete(userId);
           } else {
             likesSet.add(userId);
@@ -92,9 +97,23 @@ function NewSport() {
       })
     );
 
-    // لو عندك API لتحديث اللايك في السيرفر، هنا تبعت الطلب مثلاً:
-    // instacAxios.post(`/api/news/${postId}/like`, { userId });
+    // Make API call to update like status in backend
+    try {
+      await instacAxios.post(`/api/news/${postId}/like`, { userId });
+    } catch (error) {
+      console.error("فشل تحديث الإعجاب في الخادم:", error);
+    }
   };
+
+  const filteredNews = useMemo(() => {
+    if (!searchTerm.trim()) return sportsNews;
+    const lowerTerm = searchTerm.toLowerCase();
+    return sportsNews.filter(
+      (news) =>
+        news.title.toLowerCase().includes(lowerTerm) ||
+        news.content.toLowerCase().includes(lowerTerm)
+    );
+  }, [searchTerm, sportsNews]);
 
   return (
     <motion.div
@@ -140,16 +159,27 @@ function NewSport() {
         </div>
       </motion.div>
 
+      <div className="container py-3">
+        <input
+          type="text"
+          className="form-control mb-4"
+          placeholder="ابحث في الأخبار الرياضية..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="بحث في أخبار الرياضة"
+        />
+      </div>
+
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
-          {sportsNews.length === 0 ? (
+          {filteredNews.length === 0 ? (
             <motion.div className="col-12 text-center" variants={titleVariants}>
               <div className="alert alert-info">
-                لا توجد أخبار رياضية للمنطقة <strong>{region}</strong> حالياً.
+                لا توجد أخبار رياضية للبحث: <strong>{searchTerm}</strong>
               </div>
             </motion.div>
           ) : (
-            sportsNews.map((news) => (
+            filteredNews.map((news) => (
               <motion.div
                 key={news._id}
                 className="col-md-6 col-lg-4"

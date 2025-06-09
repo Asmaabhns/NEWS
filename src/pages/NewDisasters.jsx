@@ -6,17 +6,19 @@ import myImage from "./images/تنزيل.jpg";
 import { Link } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
 import instacAxios from "../components/Axios/Axios";
-import { useRegion } from "./RegionContext";
+import { useRegion } from "./../components/contaextApi/RegionContext";
 import CopyLinkButton from "./CopyLinkButton";
+import { useSearch } from "../components/contaextApi/searchContext";
 
 function NewDisasters() {
   const [disasterNews, setDisasterNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState({});
   const { region } = useRegion();
+  const { searchTerm, setSearchTerm } = useSearch();
 
-  // Assuming user ID is stored in localStorage
-  const userId = window.localStorage.getItem("id") || "defaultUser";
+  // Always fetch fresh userId from localStorage
+  const userId = window.localStorage.getItem("id");
 
   useEffect(() => {
     if (!region) return;
@@ -32,13 +34,11 @@ function NewDisasters() {
 
         setDisasterNews(filtered);
 
-        // Setup likedPosts map for current user
         const likesMap = {};
-        filtered.forEach(post => {
+        filtered.forEach((post) => {
           likesMap[post._id] = post.likes?.includes(userId) || false;
         });
         setLikedPosts(likesMap);
-
       } catch (error) {
         console.error("خطأ في تحميل أخبار الكوارث:", error);
         setDisasterNews([]);
@@ -48,9 +48,22 @@ function NewDisasters() {
     };
 
     fetchDisasterNews();
-  }, [region]);
+  }, [region, userId]);
+
+  const filteredNews = disasterNews.filter((news) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      news.title?.toLowerCase().includes(lowerSearch) ||
+      news.content?.toLowerCase().includes(lowerSearch)
+    );
+  });
 
   const handleLike = async (postId) => {
+    if (!userId) {
+      alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
+      return;
+    }
+
     try {
       await instacAxios.put(`/api/news/${postId}/like`, { userId });
 
@@ -60,7 +73,7 @@ function NewDisasters() {
             ? {
                 ...post,
                 likes: post.likes?.includes(userId)
-                  ? post.likes.filter(id => id !== userId)
+                  ? post.likes.filter((id) => id !== userId)
                   : [...(post.likes || []), userId],
               }
             : post
@@ -76,6 +89,7 @@ function NewDisasters() {
     }
   };
 
+  // Variants for animations (unchanged)
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
     onscreen: {
@@ -151,17 +165,28 @@ function NewDisasters() {
         </div>
       </motion.div>
 
+      {/* حقل البحث */}
+      <div className="container mt-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="ابحث في أخبار الكوارث..."
+          className="form-control"
+        />
+      </div>
+
       <div className="container py-5">
         {loading ? (
           <p className="text-center">جارٍ تحميل أخبار الكوارث...</p>
-        ) : disasterNews.length === 0 ? (
+        ) : filteredNews.length === 0 ? (
           <p className="text-center">
-            لا توجد أخبار كوارث للمنطقة <strong>{region}</strong> حالياً.
+            لا توجد أخبار كوارث تطابق البحث "{searchTerm}" في المنطقة{" "}
+            <strong>{region}</strong> حالياً.
           </p>
         ) : (
           <motion.div className="row g-4" variants={backgroundVariants}>
-            {
-                          disasterNews.map((news) => (
+            {filteredNews.map((news) => (
               <motion.div
                 key={news._id}
                 className="col-md-6 col-lg-4"
@@ -215,7 +240,7 @@ function NewDisasters() {
                       >
                         اقرأ المزيد
                       </Link>
-                      <small className="text-muted">قلم:{news.writer}</small>
+                      <small className="text-muted">قلم: {news.writer}</small>
                     </div>
 
                     <div className="d-flex justify-content-between align-items-center mt-3">
@@ -225,18 +250,15 @@ function NewDisasters() {
                       >
                         {likedPosts[news._id] ? "❤️" : "🤍"} إعجاب
                       </button>
-                      <button className="text-muted">
+                      <button className="text-muted" disabled>
                         {news.likes?.length || 0} إعجاب
-                       
                       </button>
-                      
                     </div>
-                      <CopyLinkButton postId={news._id} />
+                    <CopyLinkButton postId={news._id} />
                   </div>
                 </motion.div>
               </motion.div>
-            ))
-          }
+            ))}
           </motion.div>
         )}
       </div>

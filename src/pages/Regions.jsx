@@ -1,4 +1,4 @@
-import { useRegion } from "../pages/RegionContext";
+import { useRegion } from "../components/contaextApi/RegionContext.jsx";
 
 const Region = () => {
   const { region, setRegion } = useRegion();

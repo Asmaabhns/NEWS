@@ -71,6 +71,7 @@ console.log('جاري التسجيل:', formData);
          const { email,username, success } = response.data; 
       if (success ===true) {
       window.localStorage.setItem('login', true);
+      window.localStorage.setItem('id', response.data._id);
       setFormData(response.data); 
       setData(response.data);
       }

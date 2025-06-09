@@ -2,18 +2,23 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import HeaderTwo from "../components/HeaderTwo";
 import instacAxios from "../components/Axios/Axios";
-import { useRegion } from "./RegionContext";
+import { useRegion } from "../components/contaextApi/RegionContext";
 import CopyLinkButton from "./CopyLinkButton";
+import { useSearch } from "../components/contaextApi/searchContext";
 
 function NewWeather() {
   const [weatherNews, setWeatherNews] = useState([]);
   const [likedPosts, setLikedPosts] = useState({});
+  const [likeInProgress, setLikeInProgress] = useState(false);
+  const { searchTerm, setSearchTerm } = useSearch();
   const { region } = useRegion();
+  const navigate = useNavigate();
 
-  const userId = window.localStorage.getItem("id") || "defaultUserId"; // Replace with actual user ID logic
+  const rawUserId = localStorage.getItem("id");
+  const userId = rawUserId || "defaultUserId";
 
   const cardVariants = {
     offscreen: { y: 100, opacity: 0, scale: 0.95 },
@@ -50,11 +55,13 @@ function NewWeather() {
         const filtered = res.data.posts.filter(
           (news) => news.region === region && news.category === "الطقس"
         );
+
         setWeatherNews(filtered);
 
         const likesMap = {};
         filtered.forEach((item) => {
-          likesMap[item._id] = item.likes?.includes(userId);
+          const isLiked = item.likes?.includes(userId);
+          likesMap[item._id] = isLiked;
         });
         setLikedPosts(likesMap);
       } catch (err) {
@@ -66,7 +73,28 @@ function NewWeather() {
     fetchWeatherNews();
   }, [region]);
 
+  const filteredNews = weatherNews.filter((news) => {
+    const lowerSearch = searchTerm.toLowerCase();
+    return (
+      news.title?.toLowerCase().includes(lowerSearch) ||
+      news.content?.toLowerCase().includes(lowerSearch)
+    );
+  });
+
+  const sortedNews = [...filteredNews].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+
   const handleLike = async (newsId) => {
+    if (!rawUserId) {
+      alert("يرجى تسجيل الدخول للإعجاب بالمشاركات.");
+      navigate("/login");
+      return;
+    }
+
+    if (likeInProgress) return;
+    setLikeInProgress(true);
+
     try {
       await instacAxios.put(`/api/news/${newsId}/like`, { userId });
 
@@ -89,6 +117,8 @@ function NewWeather() {
       }));
     } catch (err) {
       console.error("فشل في تسجيل الإعجاب", err);
+    } finally {
+      setLikeInProgress(false);
     }
   };
 
@@ -121,6 +151,7 @@ function NewWeather() {
             alt="خلفية الطقس"
             className="w-100 h-100 object-fit-cover"
             style={{ filter: "brightness(0.7)" }}
+            onError={(e) => (e.target.src = "/fallback-weather.jpg")}
           />
         )}
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
@@ -136,6 +167,16 @@ function NewWeather() {
         </div>
       </motion.div>
 
+      <div className="container mt-4">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="ابحث في أخبار الطقس..."
+          className="form-control"
+        />
+      </div>
+
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
           <motion.div className="col-12 mb-4" variants={titleVariants}>
@@ -144,14 +185,14 @@ function NewWeather() {
             </div>
           </motion.div>
 
-          {weatherNews.length === 0 ? (
+          {sortedNews.length === 0 ? (
             <motion.div className="col-12 text-center" variants={titleVariants}>
               <div className="alert alert-info">
-                لا توجد أخبار طقس للمنطقة <strong>{region}</strong> في الوقت الحالي.
+                لا توجد أخبار طقس للبحث "{searchTerm}" في المنطقة <strong>{region}</strong>.
               </div>
             </motion.div>
           ) : (
-            weatherNews.map((news) => (
+            sortedNews.map((news) => (
               <motion.div
                 key={news._id}
                 className="col-md-6 col-lg-4"
@@ -186,6 +227,7 @@ function NewWeather() {
                       src={news.image}
                       alt={news.title}
                       className="img-fluid w-100 h-100 object-fit-cover"
+                      onError={(e) => (e.target.src = "/fallback-weather.jpg")}
                     />
                   </motion.div>
 
@@ -198,10 +240,7 @@ function NewWeather() {
                       <Link
                         to={`/details/${news._id}`}
                         className="btn btn-sm"
-                        style={{
-                          backgroundColor: "#4c8565",
-                          color: "white",
-                        }}
+                        style={{ backgroundColor: "#4c8565", color: "white" }}
                       >
                         اقرأ المزيد
                       </Link>
@@ -212,6 +251,8 @@ function NewWeather() {
                       <button
                         onClick={() => handleLike(news._id)}
                         className="btn btn-outline-success btn-sm"
+                        aria-pressed={likedPosts[news._id] || false}
+                        disabled={likeInProgress}
                       >
                         {likedPosts[news._id] ? "❤️" : "🤍"} إعجاب
                       </button>
@@ -219,7 +260,8 @@ function NewWeather() {
                         {news.likes?.length || 0} إعجاب
                       </small>
                     </div>
-                      <CopyLinkButton postId={news._id} />
+
+                    <CopyLinkButton postId={news._id} />
                   </div>
                 </motion.div>
               </motion.div>

@@ -10,32 +10,38 @@ const NewsList = () => {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // جلب userId مرة واحدة
+  const userId = localStorage.getItem('id');
+
   useEffect(() => {
-    const userId = localStorage.getItem('id');
     if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
       navigate('/Journalist-login');
       return;
     }
     getNews(userId);
-  }, [navigate]);
+  }, [navigate, userId]); // إضافة userId لضمان التحديث إذا تغير
 
   const getNews = async (userId) => {
     setIsLoading(true);
     setError('');
     try {
+      // تأكد من استخدام المسار الصحيح هنا
       const response = await instanceAxios.get(`/api/news/by-user/${userId}`);
-      if (response.data.success) {
+
+      if (response.data.success && Array.isArray(response.data.posts)) {
         setNews(response.data.posts);
       } else {
         setError(response.data.message || 'فشل في جلب الأخبار.');
       }
     } catch (error) {
-      console.error('فشل في جلب الأخبار:', error.response?.data || error);
+      console.error('فشل في جلب الأخبار:', error.response?.data || error.message || error);
       setError(error.response?.data?.message || 'حدث خطأ أثناء جلب الأخبار.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  // باقي الكود كما لديك
 
   const handleEdit = (id) => {
     navigate(`/edit/${id}`);
@@ -45,11 +51,18 @@ const NewsList = () => {
     setNewsToDelete(id);
   };
 
-  const confirmDelete = () => {
-    setNews(news.filter(item => item._id !== newsToDelete));
-    setNewsToDelete(null);
-    // TODO: Call API to delete post from backend
-    // instanceAxios.delete(`/api/news/${newsToDelete}`);
+  const confirmDelete = async () => {
+    try {
+      // حذف من الـ backend
+      await instanceAxios.delete(`/api/news/${newsToDelete}`);
+
+      // حذف من الواجهة فوراً
+      setNews(news.filter(item => item._id !== newsToDelete));
+      setNewsToDelete(null);
+    } catch (err) {
+      alert('فشل في حذف الخبر. حاول مرة أخرى.');
+      console.error('خطأ في الحذف:', err);
+    }
   };
 
   const cancelDelete = () => {
@@ -101,12 +114,17 @@ const NewsList = () => {
               <div className="d-flex justify-content-between align-items-center">
                 <span className="badge bg-success">{item.category}</span>
                 <div>
-
                   <button
-                    className="btn btn-sm btn-outline-danger"
+                    className="btn btn-sm btn-outline-danger me-2"
                     onClick={() => handleDelete(item._id)}
                   >
                     حذف
+                  </button>
+                  <button
+                    className="btn btn-sm btn-outline-primary"
+                    onClick={() => handleEdit(item._id)}
+                  >
+                    تعديل
                   </button>
                 </div>
               </div>

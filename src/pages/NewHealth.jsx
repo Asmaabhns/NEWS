@@ -4,18 +4,20 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../style.css";
 import HeaderTwo from "../components/HeaderTwo";
 import instanceAxios from "../components/Axios/Axios.jsx";
-import { useRegion } from "./RegionContext";
+import { useRegion } from "../components/contaextApi/RegionContext.jsx";
 import CopyLinkButton from "./CopyLinkButton.jsx";
 import { Link } from "react-router-dom";
+import { useSearch } from "../components/contaextApi/searchContext.jsx";
 
 function NewHealth() {
   const [healthPosts, setHealthPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [likedPosts, setLikedPosts] = useState({});
   const { region } = useRegion();
+  const { searchTerm, setSearchTerm } = useSearch();
 
-  // For demo: userId fetched from localStorage or fallback
-  const userId = window.localStorage.getItem("id") || "defaultUserId";
+  // Always get userId fresh from localStorage
+  const userId = window.localStorage.getItem("id");
 
   useEffect(() => {
     if (!region) return;
@@ -29,9 +31,8 @@ function NewHealth() {
           );
           setHealthPosts(filtered);
 
-          // Build likedPosts map for current user
           const likesMap = {};
-          filtered.forEach(post => {
+          filtered.forEach((post) => {
             likesMap[post._id] = post.likes?.includes(userId) || false;
           });
           setLikedPosts(likesMap);
@@ -44,20 +45,26 @@ function NewHealth() {
     };
 
     fetchHealthNews();
-  }, [region]);
+  }, [region, userId]);
 
   const handleLike = async (postId) => {
+    const currentUserId = window.localStorage.getItem("id");
+    if (!currentUserId || currentUserId === "defaultUserId") {
+      alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
+      return;
+    }
+
     try {
-      await instanceAxios.put(`/api/news/${postId}/like`, { userId });
+      await instanceAxios.put(`/api/news/${postId}/like`, { userId: currentUserId });
 
       setHealthPosts((prevPosts) =>
         prevPosts.map((post) =>
           post._id === postId
             ? {
                 ...post,
-                likes: post.likes?.includes(userId)
-                  ? post.likes.filter(id => id !== userId)
-                  : [...(post.likes || []), userId],
+                likes: post.likes?.includes(currentUserId)
+                  ? post.likes.filter((id) => id !== currentUserId)
+                  : [...(post.likes || []), currentUserId],
               }
             : post
         )
@@ -71,6 +78,10 @@ function NewHealth() {
       console.error("فشل في تسجيل الإعجاب:", error);
     }
   };
+
+  const filteredPosts = healthPosts.filter((post) =>
+    post.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <motion.div
@@ -123,10 +134,18 @@ function NewHealth() {
         <motion.div className="row g-4">
           <motion.div className="col-12 mb-4">
             <div className="card border-0 shadow-sm p-3">
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="m-0">تصفية أخبار الصحة</h5>
                 <small className="text-muted">المنطقة: {region}</small>
               </div>
+              {/* Search input */}
+              <input
+                type="text"
+                className="form-control"
+                placeholder="ابحث في عناوين الأخبار..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
           </motion.div>
 
@@ -134,14 +153,14 @@ function NewHealth() {
             <motion.div className="col-12 text-center">
               <p>جاري التحميل...</p>
             </motion.div>
-          ) : healthPosts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <motion.div className="col-12 text-center">
               <div className="alert alert-info" role="alert">
-                لا توجد أخبار صحية للمنطقة <strong>{region}</strong> حالياً.
+                لا توجد أخبار صحية تطابق بحثك في المنطقة <strong>{region}</strong>.
               </div>
             </motion.div>
           ) : (
-            healthPosts.map((post) => (
+            filteredPosts.map((post) => (
               <motion.div
                 key={post._id}
                 className="col-md-6 col-lg-4"
@@ -177,20 +196,21 @@ function NewHealth() {
                       </small>
                     </div>
 
-                          <div className="d-flex justify-content-between align-items-center">
-                            <Link
-                              to={`/details/${post._id}`}
-                              className="btn btn-sm"
-                              style={{
-                                backgroundColor: "#4c8565",
-                                color: "white",
-                              }}
-                            >
-                              اقرأ المزيد
-                            </Link>
-                            <small className="text-muted">{post.writer}</small>
-                          </div>
-                    <CopyLinkButton postId={post._id} />  
+                    <div className="d-flex justify-content-between align-items-center mt-2">
+                      <Link
+                        to={`/details/${post._id}`}
+                        className="btn btn-sm"
+                        style={{
+                          backgroundColor: "#4c8565",
+                          color: "white",
+                        }}
+                      >
+                        اقرأ المزيد
+                      </Link>
+                      <small className="text-muted">{post.writer}</small>
+                    </div>
+
+                    <CopyLinkButton postId={post._id} />
                   </div>
                 </div>
               </motion.div>

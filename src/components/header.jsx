@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 import { NavLink } from "react-router-dom";
 import LoginToggle from "./LoginToggle";
-import Region from "../pages/Regions"; // ✅ Adjust path if needed
+import Region from "../pages/Regions";
+import { SearchContext } from "./contaextApi/searchContext";
+import useDebounce from "./customHooks/useDebounce";
 
 const ScrollToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -41,7 +43,6 @@ const ScrollToTopButton = () => {
       transition: "all 0.3s ease",
     },
     scrollButtonHover: {
-      backgroundColor: "#0d9488",
       transform: "translateY(-3px)",
     },
     arrowIcon: {
@@ -63,6 +64,7 @@ const ScrollToTopButton = () => {
           style={buttonStyle}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
+          aria-label="Scroll to top"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -86,14 +88,28 @@ const ScrollToTopButton = () => {
 
 const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const { setSearchTerm } = useContext(SearchContext);
+  const [input, setInput] = useState('');
+  const debouncedInput = useDebounce(input, 500); // تأخير 500ms
 
   useEffect(() => {
+    document.documentElement.dir = "rtl";
+
+    let timeoutId = null;
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsScrolled(window.scrollY > 10);
+      }, 100);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    setSearchTerm(debouncedInput);
+  }, [debouncedInput, setSearchTerm]);
 
   const styles = {
     header: {
@@ -118,33 +134,18 @@ const Header = () => {
       padding: "0.4rem 0.6rem",
       textDecoration: "none",
     },
-    navLinkHover: {
-      color: "#4c8565",
-    },
     activeNavLink: {
       color: "#4c8565",
       fontWeight: "bold",
-    },
-    dropdownMenu: {
-      border: "none",
-      boxShadow: "0 5px 10px rgba(0, 0, 0, 0.1)",
-    },
-    dropdownItem: {
-      padding: "0.5rem 1.5rem",
-    },
-    activeDropdownItem: {
-      color: "#4c8565",
-      backgroundColor: "transparent",
-      fontWeight: "bold",
-    },
-    searchInput: {
-      borderRadius: "20px",
-      padding: "0.5rem 1rem",
     },
     navItem: {
       margin: "0 15px",
       textDecoration: "none",
       color: "#080808",
+    },
+    searchInput: {
+      borderRadius: "20px",
+      padding: "0.5rem 1rem",
     },
     title: {
       fontWeight: "bold",
@@ -152,6 +153,9 @@ const Header = () => {
       transition: "all 0.3s",
     },
   };
+
+  const getLinkStyle = (isActive) =>
+    isActive ? { ...styles.navLink, ...styles.activeNavLink } : styles.navLink;
 
   return (
     <>
@@ -182,25 +186,26 @@ const Header = () => {
 
           <div className={`row align-items-center ${isScrolled ? "py-2" : "py-3"}`}>
             <div className="col-md-8">
-              <a href="/" style={{ textDecoration: "none" }}>
+              <NavLink to="/" style={{ textDecoration: "none" }}>
                 <h2 className="mb-0" style={styles.title}>
                   لمحة <span style={{ color: "#0d9488" }}>NEWS</span>
                 </h2>
-              </a>
+              </NavLink>
             </div>
             <div className="col-md-4">
               <input
                 type="text"
-                placeholder="ادخل كلمة البحث"
+                placeholder="ابحث..."
                 className="form-control"
                 style={styles.searchInput}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
               />
             </div>
           </div>
 
           <nav
             className={`navbar navbar-expand-lg navbar-light ${isScrolled ? "py-1" : "py-2"}`}
-            style={{ ...(isScrolled ? styles.navbarScrolled : {}) }}
           >
             <div className="container-fluid">
               <button
@@ -230,69 +235,23 @@ const Header = () => {
                         className={({ isActive }) =>
                           isActive ? "nav-link active" : "nav-link"
                         }
-                        style={({ isActive }) =>
-                          isActive
-                            ? { ...styles.navLink, ...styles.activeNavLink }
-                            : styles.navLink
-                        }
+                        style={({ isActive }) => getLinkStyle(isActive)}
                       >
                         {item.name}
                       </NavLink>
                     </li>
                   ))}
-{/* 
-                  <li className="nav-item dropdown" style={styles.navItem}>
-                    <a
-                      className="nav-link dropdown-toggle"
-                      href="#"
-                      id="navbarDropdown"
-                      role="button"
-                      data-bs-toggle="dropdown"
-                      aria-expanded="false"
-                      style={styles.navLink}
-                    >
-                      المناطق
-                    </a>
-                    <ul className="dropdown-menu" aria-labelledby="navbarDropdown" style={styles.dropdownMenu}>
-                      {[
-                        { path: "/regions/north", name: "غزة" },
-                        { path: "/regions/south", name: "مصر" },
-                        { path: "/regions/east", name: "سوريا" },
-                      ].map((region) => (
-                        <li key={region.path}>
-                          <NavLink
-                            to={region.path}
-                            className={({ isActive }) =>
-                              isActive ? "dropdown-item active" : "dropdown-item"
-                            }
-                            style={({ isActive }) =>
-                              isActive
-                                ? { ...styles.dropdownItem, ...styles.activeDropdownItem }
-                                : styles.dropdownItem
-                            }
-                          >
-                            {region.name}
-                          </NavLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </li> */}
-
                   <li className="nav-item" style={styles.navItem}>
                     <NavLink
                       to="/advertise"
-                      className={({ isActive }) => (isActive ? "nav-link active" : "nav-link")}
-                      style={({ isActive }) =>
-                        isActive
-                          ? { ...styles.navLink, ...styles.activeNavLink }
-                          : styles.navLink
+                      className={({ isActive }) =>
+                        isActive ? "nav-link active" : "nav-link"
                       }
+                      style={({ isActive }) => getLinkStyle(isActive)}
                     >
                       أعلن معنا
                     </NavLink>
                   </li>
-
-                  {/* ✅ Region selector injected here */}
                   <li className="nav-item" style={{ marginLeft: "15px" }}>
                     <Region />
                   </li>
