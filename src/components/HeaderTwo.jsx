@@ -41,7 +41,7 @@ const HeaderTwo = ({ links = [] }) => {
 
       <input
         type="text"
-        placeholder="ابحث.fdsfsd.."
+        placeholder="ابحث..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         style={{

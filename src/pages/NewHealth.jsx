@@ -139,13 +139,7 @@ function NewHealth() {
                 <small className="text-muted">المنطقة: {region}</small>
               </div>
               {/* Search input */}
-              <input
-                type="text"
-                className="form-control"
-                placeholder="ابحث في عناوين الأخبار..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+
             </div>
           </motion.div>
 

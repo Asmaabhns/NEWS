@@ -159,16 +159,6 @@ function NewSport() {
         </div>
       </motion.div>
 
-      <div className="container py-3">
-        <input
-          type="text"
-          className="form-control mb-4"
-          placeholder="ابحث في الأخبار الرياضية..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          aria-label="بحث في أخبار الرياضة"
-        />
-      </div>
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>

@@ -165,16 +165,7 @@ function NewDisasters() {
         </div>
       </motion.div>
 
-      {/* حقل البحث */}
-      <div className="container mt-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="ابحث في أخبار الكوارث..."
-          className="form-control"
-        />
-      </div>
+
 
       <div className="container py-5">
         {loading ? (

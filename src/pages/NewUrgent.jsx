@@ -171,14 +171,7 @@ function NewUrgent() {
           <motion.div className="col-12 mb-4" variants={titleVariants}>
             <div className="card border-0 shadow-sm p-3 d-flex flex-column flex-md-row align-items-center justify-content-between">
               <h5 className="m-0 mb-3 mb-md-0">أخبار عاجلة - {region}</h5>
-              <input
-                type="search"
-                className="form-control w-100 w-md-50"
-                placeholder="ابحث في الأخبار العاجلة..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                aria-label="Search breaking news"
-              />
+           
             </div>
           </motion.div>
 

@@ -6,28 +6,33 @@ const NewsList = () => {
   const navigate = useNavigate();
   const [news, setNews] = useState([]);
   const [newsToDelete, setNewsToDelete] = useState(null);
+  const [editingNews, setEditingNews] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    title: '',
+    content: '',
+    category: '',
+    writer: ''
+  });
 
-  // جلب userId مرة واحدة
   const userId = localStorage.getItem('id');
-
+  
   useEffect(() => {
-    if (!userId || !/^[0-9a-fA-F]{24}$/.test(userId)) {
+    if (!userId) {
       navigate('/Journalist-login');
       return;
     }
     getNews(userId);
-  }, [navigate, userId]); // إضافة userId لضمان التحديث إذا تغير
+  }, [navigate, userId]);
 
   const getNews = async (userId) => {
     setIsLoading(true);
     setError('');
     try {
-      // تأكد من استخدام المسار الصحيح هنا
       const response = await instanceAxios.get(`/api/news/by-user/${userId}`);
-
+      console.log('جلب الأخبار:', response.data);
       if (response.data.success && Array.isArray(response.data.posts)) {
         setNews(response.data.posts);
       } else {
@@ -41,10 +46,78 @@ const NewsList = () => {
     }
   };
 
-  // باقي الكود كما لديك
+  const handleEdit = (newsItem) => {
+    setEditingNews(newsItem._id);
+    setEditFormData({
+      title: newsItem.title,
+      content: newsItem.content,
+      category: newsItem.category,
+      writer: newsItem.writer
+    });
+  };
 
-  const handleEdit = (id) => {
-    navigate(`/edit/${id}`);
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // const saveEdit = async (id) => {
+  //   try {
+  //     setIsLoading(true);
+  //     const response = await instanceAxios.put(`/api/news/${id}`, editFormData);
+      
+  //     if (response.data.success) {
+  //       // Update the news list with edited news
+  //       setNews(news.map(item => 
+  //         item._id === id ? { ...item, ...editFormData } : item
+  //       ));
+  //       setEditingNews(null);
+  //     } else {
+  //       setError(response.data.message || 'فشل في تحديث الخبر.');
+  //     }
+  //   } catch (error) {
+  //     console.error('فشل في تحديث الخبر:', error);
+  //     setError(error.response?.data?.message || 'حدث خطأ أثناء تحديث الخبر.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+const saveEdit = async (id) => {
+  try {
+    setIsLoading(true);
+    const response = await instanceAxios.put(`/api/news/${id}`, editFormData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (response.data.success) {
+      // Update the news list with edited news
+      setNews(news.map(item => 
+        item._id === id ? { ...item, ...editFormData } : item
+      ));
+      setEditingNews(null);
+      setError('');
+    } else {
+      setError(response.data.message || 'فشل في تحديث الخبر.');
+    }
+  } catch (error) {
+    console.error('فشل في تحديث الخبر:', error);
+    setError(error.response?.data?.message || 
+            error.message || 
+            'حدث خطأ أثناء تحديث الخبر.');
+    // Debugging: Log the full error and request details
+    console.log('Full error:', error);
+    console.log('Request config:', error.config);
+  } finally {
+    setIsLoading(false);
+  }
+};
+  const cancelEdit = () => {
+    setEditingNews(null);
   };
 
   const handleDelete = (id) => {
@@ -53,10 +126,7 @@ const NewsList = () => {
 
   const confirmDelete = async () => {
     try {
-      // حذف من الـ backend
       await instanceAxios.delete(`/api/news/${newsToDelete}`);
-
-      // حذف من الواجهة فوراً
       setNews(news.filter(item => item._id !== newsToDelete));
       setNewsToDelete(null);
     } catch (err) {
@@ -111,26 +181,87 @@ const NewsList = () => {
         filteredNews.map(item => (
           <div key={item._id} className="card mb-3">
             <div className="card-body">
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="badge bg-success">{item.category}</span>
-                <div>
-                  <button
-                    className="btn btn-sm btn-outline-danger me-2"
-                    onClick={() => handleDelete(item._id)}
-                  >
-                    حذف
-                  </button>
-                  <button
-                    className="btn btn-sm btn-outline-primary"
-                    onClick={() => handleEdit(item._id)}
-                  >
-                    تعديل
-                  </button>
+              {editingNews === item._id ? (
+                <div className="edit-form">
+                  <div className="mb-3">
+                    <label className="form-label">العنوان</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="title"
+                      value={editFormData.title}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">المحتوى</label>
+                    <textarea
+                      className="form-control"
+                      name="content"
+                      value={editFormData.content}
+                      onChange={handleEditChange}
+                      rows="3"
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">التصنيف</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="category"
+                      value={editFormData.category}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">الكاتب</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="writer"
+                      value={editFormData.writer}
+                      onChange={handleEditChange}
+                    />
+                  </div>
+                  <div className="d-flex justify-content-end">
+                    <button 
+                      className="btn btn-outline-secondary me-2"
+                      onClick={cancelEdit}
+                    >
+                      إلغاء
+                    </button>
+                    <button 
+                      className="btn btn-primary"
+                      onClick={() => saveEdit(item._id)}
+                    >
+                      حفظ التعديلات
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <h5 className="card-title mt-2">{item.title}</h5>
-              <p className="card-text"><strong>الكاتب:</strong> {item.writer}</p>
-              <p className="card-text">{item.content.substring(0, 100)}...</p>
+              ) : (
+                <>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="badge bg-success">{item.category}</span>
+                    <div>
+                      <button
+                        className="btn btn-sm btn-outline-danger me-2"
+                        onClick={() => handleDelete(item._id)}
+                      >
+                        حذف
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => handleEdit(item)}
+                      >
+                        تعديل
+                      </button>
+                    </div>
+                  </div>
+                  <h5 className="card-title mt-2">{item.title}</h5>
+                  <p className="card-text"><strong>الكاتب:</strong> {item.writer}</p>
+                  <p className="card-text">{item.content.substring(0, 100)}...</p>
+                </>
+              )}
             </div>
           </div>
         ))

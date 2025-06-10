@@ -167,15 +167,7 @@ function NewWeather() {
         </div>
       </motion.div>
 
-      <div className="container mt-4">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="ابحث في أخبار الطقس..."
-          className="form-control"
-        />
-      </div>
+
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>

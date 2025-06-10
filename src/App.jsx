@@ -34,6 +34,7 @@ import JournalistForgetPassword from "./pages/journalistForgetPassword";
 import NewPasswordPage from "./pages/journalistCreateNewPassword";
 import { SearchProvider } from "./components/contaextApi/searchContext";
 import { RegionProvider } from "./components/contaextApi/RegionContext";
+import EditNews from "./pages/EditNews";
 
 // ScrollToTop Component
 function ScrollToTop() {
@@ -89,7 +90,7 @@ function App() {
             <Route path="/conect" element={<ContactUs />} />
             <Route path="/news-list" element={<NewsList />} />
             <Route path="/add-news" element={<AddNews />} />
-            <Route path="/edit/:id" element={<AddNews />} />
+            <Route path="/edit/:id" element={<EditNews />} />
             <Route path="/advertise" element={<Advertise />} />
             <Route path="/verification" element={<VerificationPage />} />
             <Route path="/email" element={<Email />} />

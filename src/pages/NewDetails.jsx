@@ -33,6 +33,10 @@ function NewsDetails() {
 
   const handleLike = async () => {
     try {
+      if (!userId || userId === "defaultUserId") {
+        alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
+        return;
+      }
       await instacAxios.put(`/api/news/${id}/like`, { userId });
 
       setLikesCount((prev) => (liked ? prev - 1 : prev + 1));
