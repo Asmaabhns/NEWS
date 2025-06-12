@@ -26,7 +26,18 @@ const ContactUs = () => {
     const fetchComments = async () => {
       try {
         const { data } = await instanceAxios.get('/api/comments');
-        setMessages(data);
+
+        // آخر 5 تعليقات وآخر 5 ردود لكل تعليق
+        const processed = [...data]
+          .slice(-5)
+          .map(comment => ({
+            ...comment,
+            replay: Array.isArray(comment.replay)
+              ? comment.replay.slice(-5)
+              : []
+          }));
+
+        setMessages(processed);
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
@@ -46,7 +57,16 @@ const ContactUs = () => {
         comment: newInquiry
       });
 
-      setMessages(prev => [...prev, data]);
+      const newMessage = {
+        ...data,
+        replay: Array.isArray(data.replay) ? data.replay.slice(-5) : []
+      };
+
+      setMessages(prev => {
+        const updated = [...prev, newMessage];
+        return updated.slice(-5);
+      });
+
       setNewInquiry('');
     } catch (error) {
       console.error('Error creating comment:', error);
@@ -70,8 +90,18 @@ const ContactUs = () => {
       });
 
       setMessages(prev =>
-        prev.map(msg => (msg._id === data._id ? data : msg))
+        prev.map(msg =>
+          msg._id === data._id
+            ? {
+                ...data,
+                replay: Array.isArray(data.replay)
+                  ? data.replay.slice(-5)
+                  : []
+              }
+            : msg
+        )
       );
+
       setReplyContent('');
       setReplyingTo(null);
     } catch (error) {
@@ -147,7 +177,13 @@ const ContactUs = () => {
                     required
                   />
                   <button className="btn btn-success ms-2">إرسال</button>
-                  <button type="button" className="btn btn-danger ms-2" onClick={() => setReplyingTo(null)}>إلغاء</button>
+                  <button
+                    type="button"
+                    className="btn btn-danger ms-2"
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    إلغاء
+                  </button>
                 </form>
               </div>
             )}
@@ -159,3 +195,5 @@ const ContactUs = () => {
 };
 
 export default ContactUs;
+
+// This code defines a ContactUs component that allows users to 

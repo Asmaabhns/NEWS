@@ -64,7 +64,7 @@ const NewsList = () => {
     }));
   };
 
-  // const saveEdit = async (id) => {
+
   //   try {
   //     setIsLoading(true);
   //     const response = await instanceAxios.put(`/api/news/${id}`, editFormData);
@@ -124,16 +124,16 @@ const saveEdit = async (id) => {
     setNewsToDelete(id);
   };
 
-  const confirmDelete = async () => {
-    try {
-      await instanceAxios.delete(`/api/news/${newsToDelete}`);
-      setNews(news.filter(item => item._id !== newsToDelete));
-      setNewsToDelete(null);
-    } catch (err) {
-      alert('فشل في حذف الخبر. حاول مرة أخرى.');
-      console.error('خطأ في الحذف:', err);
-    }
-  };
+const handleDeleteNow = async (id) => {
+  try {
+    const res = await instanceAxios.delete(`/api/news/${id}`);
+    console.log('تم الحذف:', res.data);
+    setNews(prev => prev.filter(item => item._id !== id));
+  } catch (err) {
+    console.error('خطأ في الحذف:', err);
+  }
+};
+
 
   const cancelDelete = () => {
     setNewsToDelete(null);
@@ -245,7 +245,7 @@ const saveEdit = async (id) => {
                     <div>
                       <button
                         className="btn btn-sm btn-outline-danger me-2"
-                        onClick={() => handleDelete(item._id)}
+                        onClick={() =>handleDeleteNow(item._id)}
                       >
                         حذف
                       </button>

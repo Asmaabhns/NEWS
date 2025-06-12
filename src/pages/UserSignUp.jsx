@@ -68,7 +68,8 @@ const UserSignUp = () => {
 console.log('جاري التسجيل:', formData);
     try {
       const response = await axios.post('/api/auth/register', formData, );
-         const { email,username, success } = response.data; 
+      console.log('Response:', response.data);
+         const { success } = response.data; 
       if (success ===true) {
       window.localStorage.setItem('login', true);
       window.localStorage.setItem('id', response.data._id);
@@ -93,6 +94,7 @@ console.log('تم التسجيل بنجاح:',formData);
 
   const handleLoginClick = () => {
     setIsTransitioning(true);
+    localStorage.clear();
     setTimeout(() => navigate('/user-login'), 500);
   };
 

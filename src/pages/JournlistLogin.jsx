@@ -62,9 +62,7 @@ const JournalistLogin = () => {
   };
 
   const handleLogoutClick = () => {
-    localStorage.removeItem("email");
-    localStorage.removeItem("id");
-    localStorage.removeItem("isLoggedIn");
+localStorage.clear();
     setSuccess(false);
     setCredentials({ email: "", password: "" });
     setError("");
@@ -77,6 +75,7 @@ const JournalistLogin = () => {
 
   const handleSignupClick = () => {
     setIsTransitioning(true);
+    localStorage.clear();
     navigate("/journalist-signup");
   };
 const goToEmail = () => {

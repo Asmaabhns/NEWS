@@ -41,6 +41,12 @@ function NewSport() {
     },
   };
 
+  // Load liked posts from localStorage (optional)
+  useEffect(() => {
+    const savedLikes = JSON.parse(localStorage.getItem("likedPosts") || "{}");
+    setLikedPosts(savedLikes);
+  }, []);
+
   useEffect(() => {
     if (!region) return;
 
@@ -51,11 +57,14 @@ function NewSport() {
           (news) => news.region === region && news.category === "الرياضة"
         );
         setSportsNews(filtered);
+
+        // Map liked posts per current user
         const likesMap = {};
         filtered.forEach((item) => {
           likesMap[item._id] = item.likes?.includes(userId);
         });
         setLikedPosts(likesMap);
+        localStorage.setItem("likedPosts", JSON.stringify(likesMap));
       } catch (error) {
         console.error("خطأ في جلب أخبار الرياضة:", error);
         setSportsNews([]);
@@ -65,45 +74,38 @@ function NewSport() {
     fetchNews();
   }, [region, userId]);
 
-  const handleLike = async (postId) => {
-    if (!userId || userId === "defaultUserId") {
-      alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
-      return;
-    }
+const handleLike = async (postId) => {
+  const currentUserId = window.localStorage.getItem("id");
+  if (!currentUserId || currentUserId === "defaultUserId") {
+    alert("يرجى تسجيل الدخول أولاً لتسجيل الإعجاب.");
+    return;
+  }
 
-    const isCurrentlyLiked = likedPosts[postId];
+  try {
+    await instacAxios.put(`/api/news/${postId}/like`, { userId: currentUserId });
 
-    // Optimistically update UI
-    setLikedPosts((prev) => ({
-      ...prev,
-      [postId]: !isCurrentlyLiked,
-    }));
-
-    setSportsNews((prevSportsNews) =>
-      prevSportsNews.map((news) => {
-        if (news._id === postId) {
-          const likesSet = new Set(news.likes || []);
-          if (isCurrentlyLiked) {
-            likesSet.delete(userId);
-          } else {
-            likesSet.add(userId);
-          }
-          return {
-            ...news,
-            likes: Array.from(likesSet),
-          };
-        }
-        return news;
-      })
+    setSportsNews((prevPosts) =>
+      prevPosts.map((post) =>
+        post._id === postId
+          ? {
+              ...post,
+              likes: post.likes?.includes(currentUserId)
+                ? post.likes.filter((id) => id !== currentUserId)
+                : [...(post.likes || []), currentUserId],
+            }
+          : post
+      )
     );
 
-    // Make API call to update like status in backend
-    try {
-      await instacAxios.post(`/api/news/${postId}/like`, { userId });
-    } catch (error) {
-      console.error("فشل تحديث الإعجاب في الخادم:", error);
-    }
-  };
+    setLikedPosts((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  } catch (error) {
+    console.error("فشل في تسجيل الإعجاب:", error);
+  }
+};
+
 
   const filteredNews = useMemo(() => {
     if (!searchTerm.trim()) return sportsNews;
@@ -158,7 +160,6 @@ function NewSport() {
           </motion.div>
         </div>
       </motion.div>
-
 
       <div className="container py-5">
         <motion.div className="row g-4" variants={backgroundVariants}>
