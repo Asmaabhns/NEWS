@@ -15,7 +15,7 @@ newsRouter.route("/by-user/:userId").get(getNewsByUserId); // Get a single post 
 
 newsRouter.route('/:id/like').put( likeNews);
 
-newsRouter.route('/:id').delete(verifyToken,verifyAdmin,deleteNews); // Delete a post by ID
+
 
 newsRouter.route('/:id').delete(deleteNews).put( updateNews); // Add this PUT route
 

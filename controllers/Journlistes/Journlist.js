@@ -1,5 +1,5 @@
 import Journlistes from "../../models/journalist.js";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { sendResetEmail } from "../../utils/emailSender.js";
 import crypto from 'crypto';
 
